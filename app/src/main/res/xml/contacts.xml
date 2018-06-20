@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContactsAccountType xmlns:android="http://schemas.android.com/apk/res/android">
+    <EditSchema>
+        <DataKind kind="name" maxOccurs="1" supportsDisplayName="true" supportsPrefix="true" supportsMiddleName="true" supportsSuffix="true" supportsPhoneticFamilyName="true" supportsPhoneticMiddleName="true" supportsPhoneticGivenName="true" />
+        <DataKind kind="photo" maxOccurs="1" />
+        <DataKind kind="phone">
+            <Type type="UNKNOWN_DATA_0x16" />
+            <Type type="UNKNOWN_DATA_0x17" />
+            <Type type="UNKNOWN_DATA_0x18" />
+            <Type type="UNKNOWN_DATA_0x19" />
+        </DataKind>
+        <DataKind kind="email">
+            <Type type="UNKNOWN_DATA_0x1b" />
+            <Type type="UNKNOWN_DATA_0x18" />
+            <Type type="UNKNOWN_DATA_0x1c" />
+            <Type type="UNKNOWN_DATA_0x16" />
+            <Type type="UNKNOWN_DATA_0x1d" />
+        </DataKind>
+        <DataKind kind="nickname" maxOccurs="1" />
+        <DataKind kind="postal" needsStructured="false">
+            <Type type="UNKNOWN_DATA_0x1b" />
+            <Type type="UNKNOWN_DATA_0x18" />
+            <Type type="UNKNOWN_DATA_0x1c" />
+            <Type type="UNKNOWN_DATA_0x1d" />
+        </DataKind>
+        <DataKind kind="organization" maxOccurs="1" />
+        <DataKind kind="website" />
+        <DataKind kind="sip_address" maxOccurs="1" />
+        <DataKind kind="note" maxOccurs="1" />
+        <DataKind kind="event" dateWithTime="false">
+            <Type type="UNKNOWN_DATA_0x29" maxOccurs="1" yearOptional="true" />
+            <Type type="UNKNOWN_DATA_0x2a" />
+            <Type type="UNKNOWN_DATA_0x1c" />
+            <Type type="UNKNOWN_DATA_0x1d" />
+        </DataKind>
+        <DataKind kind="relationship">
+            <Type type="UNKNOWN_DATA_0x2c" />
+            <Type type="UNKNOWN_DATA_0x2d" />
+            <Type type="UNKNOWN_DATA_0x2e" />
+            <Type type="UNKNOWN_DATA_0x2f" />
+            <Type type="UNKNOWN_DATA_0x30" />
+            <Type type="UNKNOWN_DATA_0x31" />
+            <Type type="UNKNOWN_DATA_0x32" />
+            <Type type="UNKNOWN_DATA_0x33" />
+            <Type type="UNKNOWN_DATA_0x34" />
+            <Type type="UNKNOWN_DATA_0x35" />
+            <Type type="UNKNOWN_DATA_0x36" />
+            <Type type="UNKNOWN_DATA_0x37" />
+            <Type type="UNKNOWN_DATA_0x38" />
+            <Type type="UNKNOWN_DATA_0x39" />
+            <Type type="UNKNOWN_DATA_0x1d" />
+        </DataKind>
+    </EditSchema>
+</ContactsAccountType>

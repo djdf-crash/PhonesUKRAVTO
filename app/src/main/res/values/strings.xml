@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Phones UKRAVTO</string>
+    <string name="enter_your_corporate_email">Enter your corporate email:</string>
+    <string name="custom_account">UKRAVTO</string>
+	<string name="ACCOUNT_TYPE">ua.in.ukravto.kb</string>
+    <string name="text_login">LogIn</string>
+</resources>
