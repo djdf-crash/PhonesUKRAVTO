@@ -16,8 +16,8 @@ public class MainViewModel extends AndroidViewModel {
         mRepository = new RepositoryServiceImpl(application);
     }
 
-    public void logIn(String email){
-        mRepository.logIn(email);
+    public void logIn(String email, String devID){
+        mRepository.logIn(email, devID);
     }
 
 }

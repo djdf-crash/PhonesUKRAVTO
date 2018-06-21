@@ -20,6 +20,9 @@ public class RetrofitHelper {
     }
 
     public static PhoneService getPhoneService(){
+        if (mInstance == null){
+            getInstance();
+        }
         return mInstance.create(PhoneService.class);
     }
 

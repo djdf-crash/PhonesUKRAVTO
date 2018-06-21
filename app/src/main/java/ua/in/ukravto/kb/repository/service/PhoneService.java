@@ -8,6 +8,7 @@ import retrofit2.http.Query;
 import ua.in.ukravto.kb.repository.database.model.EmployeeOrganizationModel;
 import ua.in.ukravto.kb.repository.database.model.EmployeePhoneModel;
 import ua.in.ukravto.kb.repository.database.model.Response;
+import ua.in.ukravto.kb.repository.database.model.ResponseString;
 
 public interface PhoneService {
 
@@ -15,5 +16,5 @@ public interface PhoneService {
     Call<Response<EmployeePhoneModel>> listEmployeePhones();
 
     @POST("user/token")
-    Call<Response<EmployeeOrganizationModel>> logIn(@Query("email") String email, @Query("email") String idDevice);
+    Call<ResponseString<String>> logIn(@Query("email") String email, @Query("deviceid") String idDevice);
 }
