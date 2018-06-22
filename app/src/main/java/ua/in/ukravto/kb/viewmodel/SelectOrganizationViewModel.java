@@ -13,6 +13,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.in.ukravto.kb.adapters.ListOrganizationRecyclerAdapter;
 import ua.in.ukravto.kb.repository.RepositoryService;
 import ua.in.ukravto.kb.repository.RepositoryServiceImpl;
 import ua.in.ukravto.kb.repository.database.model.EmployeeOrganizationModel;
@@ -23,6 +24,7 @@ public class SelectOrganizationViewModel extends AndroidViewModel {
 
     private RepositoryService mRepository;
     private MutableLiveData<PhoneResponse<EmployeeOrganizationModel>> responseListOrganizationsLiveData = new MutableLiveData<>();
+    private MutableLiveData<ListOrganizationRecyclerAdapter> adapterMutableLiveData = new MutableLiveData<>();
     private List<EmployeeOrganizationModel> listSavedOrganization;
     private Context ctx;
     private Gson mGson;

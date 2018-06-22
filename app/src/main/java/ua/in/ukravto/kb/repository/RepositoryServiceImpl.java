@@ -28,6 +28,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         if (!isNetworkAvailable(mCtx)) {
             ResponseString<String> stringResponseString = new ResponseString<>();
             stringResponseString.setError("Check internet connection!");
+            stringResponseString.setResult(false);
             responseStringMutableLiveData.setValue(stringResponseString);
             return;
         }
@@ -41,6 +42,7 @@ public class RepositoryServiceImpl implements RepositoryService {
             public void onFailure(Call<ResponseString<String>> call, Throwable t) {
                 ResponseString<String> stringResponseString = new ResponseString<>();
                 stringResponseString.setError(t.getMessage());
+                stringResponseString.setResult(false);
                 responseStringMutableLiveData.postValue(stringResponseString);
             }
         });
@@ -51,6 +53,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         if (!isNetworkAvailable(mCtx)) {
             PhoneResponse<EmployeeOrganizationModel> phoneResponse = new PhoneResponse<>();
             phoneResponse.setError("Check internet connection!");
+            phoneResponse.setResult(false);
             mutableLiveDataResponseOrganization.setValue(phoneResponse);
             return;
         }
@@ -73,6 +76,7 @@ public class RepositoryServiceImpl implements RepositoryService {
             public void onFailure(Call<PhoneResponse<EmployeeOrganizationModel>> call, Throwable t) {
                 PhoneResponse<EmployeeOrganizationModel> phoneResponse = new PhoneResponse<>();
                 phoneResponse.setError(t.getMessage());
+                phoneResponse.setResult(false);
                 mutableLiveDataResponseOrganization.postValue(phoneResponse);
             }
         });

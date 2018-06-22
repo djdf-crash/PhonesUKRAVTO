@@ -6,10 +6,12 @@ import android.databinding.DataBindingUtil;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
@@ -45,38 +47,27 @@ public class SelectOrganizationActivity extends AppCompatActivity {
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_select_organization);
         mBinding.recyclerListOrganization.setHasFixedSize(true);
         mLayoutManager = new LinearLayoutManager(this);
+        listOrganization = new ArrayList<>();
         mBinding.recyclerListOrganization.setLayoutManager(mLayoutManager);
+
+        mBinding.recyclerListOrganization.addItemDecoration(new DividerItemDecoration(this,
+                DividerItemDecoration.VERTICAL));
+
 
         mViewModel = ViewModelProviders.of(this).get(SelectOrganizationViewModel.class);
 
         mLoadToast =  new LoadToast(this);
         mLoadToast.setText("I will get data on organizations...");
+        mLoadToast.setTranslationY(350);
         mLoadToast.show();
-
-        String token = Pref.getInstance(getApplicationContext()).getString(Pref.USER_TOKEN, "");
-
-        mViewModel.getListOrganizations(token).observe(this, new Observer<PhoneResponse<EmployeeOrganizationModel>>() {
-            @Override
-            public void onChanged(@Nullable PhoneResponse<EmployeeOrganizationModel> employeeOrganizationModelPhoneResponse) {
-                if (employeeOrganizationModelPhoneResponse != null && employeeOrganizationModelPhoneResponse.getResult() && TextUtils.isEmpty(employeeOrganizationModelPhoneResponse.getError())) {
-                    listOrganization = employeeOrganizationModelPhoneResponse.getBody();
-                    mAdapter = new ListOrganizationRecyclerAdapter();
-                    mViewModel.checkListOrganization(listOrganization);
-                    mAdapter.setData(listOrganization);
-                    mBinding.recyclerListOrganization.setAdapter(mAdapter);
-                    mLoadToast.success();
-                }else {
-                    Toast.makeText(getApplicationContext(), employeeOrganizationModelPhoneResponse.getError(), Toast.LENGTH_LONG).show();
-                    mLoadToast.error();
-                }
-            }
-        });
 
         mBinding.btSelectAll.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 mViewModel.selectOrganization(listOrganization, true);
-                mAdapter.notifyDataSetChanged();
+                if (listOrganization.size() > 0) {
+                    mAdapter.notifyDataSetChanged();
+                }
             }
         });
 
@@ -84,7 +75,9 @@ public class SelectOrganizationActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 mViewModel.selectOrganization(listOrganization, false);
-                mAdapter.notifyDataSetChanged();
+                if (listOrganization.size() > 0) {
+                    mAdapter.notifyDataSetChanged();
+                }
             }
         });
 
@@ -95,5 +88,31 @@ public class SelectOrganizationActivity extends AppCompatActivity {
                 finish();
             }
         });
+    }
+
+    @Override
+    protected void onStart() {
+        String token = Pref.getInstance(getApplicationContext()).getString(Pref.USER_TOKEN, "");
+
+        mViewModel.getListOrganizations(token).observe(this, new Observer<PhoneResponse<EmployeeOrganizationModel>>() {
+            @Override
+            public void onChanged(@Nullable PhoneResponse<EmployeeOrganizationModel> employeeOrganizationModelPhoneResponse) {
+                if (employeeOrganizationModelPhoneResponse != null) {
+                    if (employeeOrganizationModelPhoneResponse.getResult() && TextUtils.isEmpty(employeeOrganizationModelPhoneResponse.getError())) {
+                        listOrganization = employeeOrganizationModelPhoneResponse.getBody();
+                        mAdapter = new ListOrganizationRecyclerAdapter();
+                        mViewModel.checkListOrganization(listOrganization);
+                        mAdapter.setData(listOrganization);
+                        mAdapter.notifyDataSetChanged();
+                        mBinding.recyclerListOrganization.setAdapter(mAdapter);
+                        mLoadToast.success();
+                    } else {
+                        Toast.makeText(getApplicationContext(), employeeOrganizationModelPhoneResponse.getError(), Toast.LENGTH_LONG).show();
+                        mLoadToast.error();
+                    }
+                }
+            }
+        });
+        super.onStart();
     }
 }

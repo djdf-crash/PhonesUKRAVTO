@@ -58,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
 
         mLoadToast =  new LoadToast(this);
         mLoadToast.setText("Send request...");
+        mLoadToast.setTranslationY(350);
 
         mViewModel.getResponseLoginLiveData().observe(this, new Observer<ResponseString<String>>() {
             @Override
