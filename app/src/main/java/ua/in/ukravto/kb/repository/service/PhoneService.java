@@ -15,6 +15,9 @@ public interface PhoneService {
     @GET("phones/all")
     Call<PhoneResponse<EmployeePhoneModel>> listEmployeePhones(String token);
 
+    @GET("phones/lastupdate")
+    Call<PhoneResponse<EmployeePhoneModel>> getAllPhonesLastUpdate(@Header("token") String token);
+
     @GET("organization/all")
     Call<PhoneResponse<EmployeeOrganizationModel>> getListOrganizations(@Header("token") String token);
 

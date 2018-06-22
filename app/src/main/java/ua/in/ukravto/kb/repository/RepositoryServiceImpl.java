@@ -4,6 +4,7 @@ import android.arch.lifecycle.MutableLiveData;
 import android.content.Context;
 import android.net.ConnectivityManager;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,6 +12,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.in.ukravto.kb.repository.database.model.EmployeeOrganizationModel;
+import ua.in.ukravto.kb.repository.database.model.EmployeePhoneModel;
 import ua.in.ukravto.kb.repository.database.model.PhoneResponse;
 import ua.in.ukravto.kb.repository.database.model.ResponseString;
 import ua.in.ukravto.kb.repository.service.RetrofitHelper;
@@ -80,6 +82,20 @@ public class RepositoryServiceImpl implements RepositoryService {
                 mutableLiveDataResponseOrganization.postValue(phoneResponse);
             }
         });
+    }
+
+    @Override
+    public PhoneResponse<EmployeePhoneModel> getAllPhonesLastUpdate(String token) {
+
+        if (!isNetworkAvailable(mCtx)) {
+            return null;
+        }
+        try {
+            return RetrofitHelper.getPhoneService().getAllPhonesLastUpdate(token).execute().body();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     private boolean isNetworkAvailable(Context context) {

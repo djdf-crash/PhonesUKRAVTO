@@ -1,9 +1,22 @@
 package ua.in.ukravto.kb.view;
 
+import android.Manifest;
+import android.accounts.Account;
+import android.accounts.AccountManager;
+import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.ContentResolver;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.databinding.DataBindingUtil;
+import android.net.Uri;
+import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.DividerItemDecoration;
@@ -11,15 +24,10 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.LinearLayout;
 import android.widget.Toast;
-
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
 import net.steamcrafted.loadtoast.LoadToast;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,14 +39,21 @@ import ua.in.ukravto.kb.repository.database.model.PhoneResponse;
 import ua.in.ukravto.kb.utils.Pref;
 import ua.in.ukravto.kb.viewmodel.SelectOrganizationViewModel;
 
+import static ua.in.ukravto.kb.view.MainActivity.AUTHORITY;
+
 public class SelectOrganizationActivity extends AppCompatActivity {
 
+    private static boolean PERMISSION_READ_STATE_GRANTED = false;
     private ActivitySelectOrganizationBinding mBinding;
     private SelectOrganizationViewModel mViewModel;
     private LoadToast mLoadToast;
     private RecyclerView.LayoutManager mLayoutManager;
     private List<EmployeeOrganizationModel> listOrganization;
     private ListOrganizationRecyclerAdapter mAdapter;
+    private AccountManager mAccountManager;
+    private String mToken;
+
+    private static final int REQUEST_PERMISSIONS_CONTACTS = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +68,7 @@ public class SelectOrganizationActivity extends AppCompatActivity {
         mBinding.recyclerListOrganization.addItemDecoration(new DividerItemDecoration(this,
                 DividerItemDecoration.VERTICAL));
 
+        mAccountManager = AccountManager.get(getApplicationContext());
 
         mViewModel = ViewModelProviders.of(this).get(SelectOrganizationViewModel.class);
 
@@ -84,17 +100,45 @@ public class SelectOrganizationActivity extends AppCompatActivity {
         mBinding.fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mViewModel.saveOrganizationForSync(listOrganization);
-                finish();
+                checkPermissionContacts();
+                if (PERMISSION_READ_STATE_GRANTED) {
+                    List<EmployeeOrganizationModel> listSave = mViewModel.saveOrganizationForSync(listOrganization);
+                    if (listSave.size() > 0) {
+                        addAccount(new Account(getString(R.string.custom_account), getString(R.string.ACCOUNT_TYPE)));
+                    }
+                    finish();
+                }
             }
         });
     }
 
+    private void checkPermissionContacts() {
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_CONTACTS) != PackageManager.PERMISSION_GRANTED ||
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED ||
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_SYNC_SETTINGS) != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_CONTACTS,
+                    Manifest.permission.READ_CONTACTS,
+                    Manifest.permission.WRITE_SYNC_SETTINGS}, REQUEST_PERMISSIONS_CONTACTS);
+
+        }
+    }
+
+    private void addAccount(Account account) {
+        if (mAccountManager.addAccountExplicitly(account, null, null)) {
+            mAccountManager.setAuthToken(account, "full_access", mToken);
+            ContentResolver.addPeriodicSync(account, AUTHORITY, Bundle.EMPTY, 10800);
+            ContentResolver.setIsSyncable(account, AUTHORITY, 1);
+            ContentResolver.setSyncAutomatically(account, AUTHORITY, true);
+        }
+    }
+
     @Override
     protected void onStart() {
-        String token = Pref.getInstance(getApplicationContext()).getString(Pref.USER_TOKEN, "");
+        mToken = Pref.getInstance(getApplicationContext()).getString(Pref.USER_TOKEN, "");
 
-        mViewModel.getListOrganizations(token).observe(this, new Observer<PhoneResponse<EmployeeOrganizationModel>>() {
+        mViewModel.getListOrganizations(mToken).observe(this, new Observer<PhoneResponse<EmployeeOrganizationModel>>() {
             @Override
             public void onChanged(@Nullable PhoneResponse<EmployeeOrganizationModel> employeeOrganizationModelPhoneResponse) {
                 if (employeeOrganizationModelPhoneResponse != null) {
@@ -114,5 +158,55 @@ public class SelectOrganizationActivity extends AppCompatActivity {
             }
         });
         super.onStart();
+    }
+
+    private void startAppSettingsConfigActivity() {
+        final Intent i = new Intent();
+        i.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        i.addCategory(Intent.CATEGORY_DEFAULT);
+        i.setData(Uri.parse("package:" + getPackageName()));
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        i.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+        i.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+        startActivity(i);
+    }
+
+    @SuppressLint("MissingPermission")
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+
+        if (requestCode == REQUEST_PERMISSIONS_CONTACTS) {
+
+//            grantResults.fo
+
+            if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+
+                new AlertDialog.Builder(SelectOrganizationActivity.this)
+                        .setMessage("This permission is required for the correct operation of the application!")
+                        .setPositiveButton("yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                if (ActivityCompat.shouldShowRequestPermissionRationale(SelectOrganizationActivity.this, Manifest.permission.WRITE_CONTACTS) ||
+                                        ActivityCompat.shouldShowRequestPermissionRationale(SelectOrganizationActivity.this, Manifest.permission.READ_CONTACTS) ||
+                                        ActivityCompat.shouldShowRequestPermissionRationale(SelectOrganizationActivity.this, Manifest.permission.WRITE_SYNC_SETTINGS)) {
+                                    ActivityCompat.requestPermissions(SelectOrganizationActivity.this, new String[]{Manifest.permission.WRITE_CONTACTS,
+                                                    Manifest.permission.READ_CONTACTS,
+                                                    Manifest.permission.WRITE_SYNC_SETTINGS},
+                                            REQUEST_PERMISSIONS_CONTACTS);
+                                } else {
+                                    startAppSettingsConfigActivity();
+                                }
+                            }
+                        })
+                        .setNegativeButton("no", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.dismiss();
+                            }
+                        }).show();
+            }else {
+                PERMISSION_READ_STATE_GRANTED = true;
+            }
+        }
     }
 }

@@ -119,6 +119,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
     private void startAppSettingsConfigActivity() {
         final Intent i = new Intent();
         i.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);

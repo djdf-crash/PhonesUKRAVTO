@@ -53,7 +53,7 @@ public class SelectOrganizationViewModel extends AndroidViewModel {
         }
     }
 
-    public void saveOrganizationForSync(List<EmployeeOrganizationModel> listOrganization) {
+    public List<EmployeeOrganizationModel> saveOrganizationForSync(List<EmployeeOrganizationModel> listOrganization) {
         List<EmployeeOrganizationModel> listSave = new ArrayList<>();
         for (EmployeeOrganizationModel organizationModel : listOrganization) {
             if (!organizationModel.getIsChecked()){
@@ -69,6 +69,7 @@ public class SelectOrganizationViewModel extends AndroidViewModel {
         }else {
             Pref.getInstance(ctx).edit().putBoolean(Pref.SYNC_ALL_ORGANIZATION, false).apply();
         }
+        return listSave;
     }
 
     public void checkListOrganization(List<EmployeeOrganizationModel> listOrganization) {
