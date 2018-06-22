@@ -4,6 +4,9 @@ import android.arch.lifecycle.MutableLiveData;
 import android.content.Context;
 import android.net.ConnectivityManager;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -44,16 +47,38 @@ public class RepositoryServiceImpl implements RepositoryService {
     }
 
     @Override
-    public void getListOrganization(String token, MutableLiveData<PhoneResponse<EmployeeOrganizationModel>> mutableLiveDataResponseOrganization) {
+    public void getListOrganization(String token, final MutableLiveData<PhoneResponse<EmployeeOrganizationModel>> mutableLiveDataResponseOrganization) {
         if (!isNetworkAvailable(mCtx)) {
             PhoneResponse<EmployeeOrganizationModel> phoneResponse = new PhoneResponse<>();
             phoneResponse.setError("Check internet connection!");
             mutableLiveDataResponseOrganization.setValue(phoneResponse);
             return;
         }
+        RetrofitHelper.getPhoneService().getListOrganizations(token).enqueue(new Callback<PhoneResponse<EmployeeOrganizationModel>>() {
+            @Override
+            public void onResponse(Call<PhoneResponse<EmployeeOrganizationModel>> call, Response<PhoneResponse<EmployeeOrganizationModel>> response) {
+                PhoneResponse<EmployeeOrganizationModel> phoneResponse = response.body();
+                List<EmployeeOrganizationModel> list = new ArrayList<>();
+                for (EmployeeOrganizationModel organizationModel : phoneResponse.getBody()) {
+                    if (organizationModel.getIsDelete()){
+                        continue;
+                    }
+                    list.add(organizationModel);
+                }
+                phoneResponse.setBody(list);
+                mutableLiveDataResponseOrganization.postValue(phoneResponse);
+            }
+
+            @Override
+            public void onFailure(Call<PhoneResponse<EmployeeOrganizationModel>> call, Throwable t) {
+                PhoneResponse<EmployeeOrganizationModel> phoneResponse = new PhoneResponse<>();
+                phoneResponse.setError(t.getMessage());
+                mutableLiveDataResponseOrganization.postValue(phoneResponse);
+            }
+        });
     }
 
-    public boolean isNetworkAvailable(Context context) {
+    private boolean isNetworkAvailable(Context context) {
         final ConnectivityManager connectivityManager = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE));
         return connectivityManager.getActiveNetworkInfo() != null && connectivityManager.getActiveNetworkInfo().isConnected();
     }

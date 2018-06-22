@@ -18,7 +18,6 @@ public class MainViewModel extends AndroidViewModel {
 
     private RepositoryService mRepository;
     private MutableLiveData<ResponseString<String>> responseLoginLiveData = new MutableLiveData<>();
-    private MutableLiveData<PhoneResponse<EmployeeOrganizationModel>> responseListOrganizationsLiveData = new MutableLiveData<>();
 
     public MainViewModel(@NonNull Application application) {
         super(application);
@@ -27,10 +26,6 @@ public class MainViewModel extends AndroidViewModel {
 
     public void logIn(String email, String devID){
         mRepository.logIn(email, devID, responseLoginLiveData);
-    }
-
-    public void getListOrganizations(String token){
-        mRepository.getListOrganization(token, responseListOrganizationsLiveData);
     }
 
     public MutableLiveData<ResponseString<String>> getResponseLoginLiveData() {

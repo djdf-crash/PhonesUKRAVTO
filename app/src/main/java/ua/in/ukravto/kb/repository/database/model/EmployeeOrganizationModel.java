@@ -14,6 +14,8 @@ public class EmployeeOrganizationModel {
     @Expose
     private Boolean isDelete;
 
+    private Boolean isChecked = false;
+
     public Integer getID() {
         return iD;
     }
@@ -38,4 +40,11 @@ public class EmployeeOrganizationModel {
         this.isDelete = isDelete;
     }
 
+    public Boolean getIsChecked() {
+        return isChecked;
+    }
+
+    public void setIsChecked(Boolean isChecked) {
+        this.isChecked = isChecked;
+    }
 }
