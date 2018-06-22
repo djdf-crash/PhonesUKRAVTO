@@ -1,6 +1,13 @@
 package ua.in.ukravto.kb.repository;
 
+import android.arch.lifecycle.MutableLiveData;
+
+import ua.in.ukravto.kb.repository.database.model.EmployeeOrganizationModel;
+import ua.in.ukravto.kb.repository.database.model.PhoneResponse;
+import ua.in.ukravto.kb.repository.database.model.ResponseString;
+
 public interface RepositoryService {
 
-    void logIn(String email, String idDevice);
+    void logIn(String email, String idDevice, MutableLiveData<ResponseString<String>> responseStringMutableLiveData);
+    void getListOrganization(String token, MutableLiveData<PhoneResponse<EmployeeOrganizationModel>> mutableLiveDataResponseOrganization);
 }

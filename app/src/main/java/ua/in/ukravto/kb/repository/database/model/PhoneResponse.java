@@ -6,7 +6,7 @@ import com.google.gson.annotations.SerializedName;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Response<T> {
+public class PhoneResponse<T> {
 
     @SerializedName("result")
     @Expose

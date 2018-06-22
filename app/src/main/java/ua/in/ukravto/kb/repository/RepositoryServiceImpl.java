@@ -1,15 +1,16 @@
 package ua.in.ukravto.kb.repository;
 
+import android.arch.lifecycle.MutableLiveData;
 import android.content.Context;
+import android.net.ConnectivityManager;
 
 import retrofit2.Call;
 import retrofit2.Callback;
+import retrofit2.Response;
 import ua.in.ukravto.kb.repository.database.model.EmployeeOrganizationModel;
-import ua.in.ukravto.kb.repository.database.model.Response;
+import ua.in.ukravto.kb.repository.database.model.PhoneResponse;
 import ua.in.ukravto.kb.repository.database.model.ResponseString;
 import ua.in.ukravto.kb.repository.service.RetrofitHelper;
-import ua.in.ukravto.kb.utils.Constants;
-import ua.in.ukravto.kb.utils.Hmac;
 
 public class RepositoryServiceImpl implements RepositoryService {
 
@@ -20,20 +21,40 @@ public class RepositoryServiceImpl implements RepositoryService {
     }
 
     @Override
-    public void logIn(String email, String idDevice) {
+    public void logIn(String email, String idDevice, final MutableLiveData<ResponseString<String>> responseStringMutableLiveData) {
+        if (!isNetworkAvailable(mCtx)) {
+            ResponseString<String> stringResponseString = new ResponseString<>();
+            stringResponseString.setError("Check internet connection!");
+            responseStringMutableLiveData.setValue(stringResponseString);
+            return;
+        }
         RetrofitHelper.getPhoneService().logIn(email, idDevice).enqueue(new Callback<ResponseString<String>>() {
             @Override
-            public void onResponse(Call<ResponseString<String>> call, retrofit2.Response<ResponseString<String>> response) {
-                boolean result = response.body().getResult();
-                if (result){
-
-                }
+            public void onResponse(Call<ResponseString<String>> call, Response<ResponseString<String>> response) {
+                responseStringMutableLiveData.postValue(response.body());
             }
 
             @Override
             public void onFailure(Call<ResponseString<String>> call, Throwable t) {
-
+                ResponseString<String> stringResponseString = new ResponseString<>();
+                stringResponseString.setError(t.getMessage());
+                responseStringMutableLiveData.postValue(stringResponseString);
             }
         });
+    }
+
+    @Override
+    public void getListOrganization(String token, MutableLiveData<PhoneResponse<EmployeeOrganizationModel>> mutableLiveDataResponseOrganization) {
+        if (!isNetworkAvailable(mCtx)) {
+            PhoneResponse<EmployeeOrganizationModel> phoneResponse = new PhoneResponse<>();
+            phoneResponse.setError("Check internet connection!");
+            mutableLiveDataResponseOrganization.setValue(phoneResponse);
+            return;
+        }
+    }
+
+    public boolean isNetworkAvailable(Context context) {
+        final ConnectivityManager connectivityManager = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE));
+        return connectivityManager.getActiveNetworkInfo() != null && connectivityManager.getActiveNetworkInfo().isConnected();
     }
 }
