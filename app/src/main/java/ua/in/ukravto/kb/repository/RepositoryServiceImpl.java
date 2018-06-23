@@ -85,17 +85,29 @@ public class RepositoryServiceImpl implements RepositoryService {
     }
 
     @Override
-    public PhoneResponse<EmployeePhoneModel> getAllPhonesLastUpdate(String token) {
+    public void getAllPhonesLastUpdate(String token, final MutableLiveData<PhoneResponse<EmployeePhoneModel>> mutableLiveData) {
 
         if (!isNetworkAvailable(mCtx)) {
-            return null;
+            PhoneResponse<EmployeePhoneModel> phoneResponse = new PhoneResponse<>();
+            phoneResponse.setError("Check internet connection!");
+            phoneResponse.setResult(false);
+            mutableLiveData.setValue(phoneResponse);
+            return;
         }
-        try {
-            return RetrofitHelper.getPhoneService().getAllPhonesLastUpdate(token).execute().body();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
+        RetrofitHelper.getPhoneService().getAllPhonesLastUpdate(token).enqueue(new Callback<PhoneResponse<EmployeePhoneModel>>() {
+            @Override
+            public void onResponse(Call<PhoneResponse<EmployeePhoneModel>> call, Response<PhoneResponse<EmployeePhoneModel>> response) {
+                mutableLiveData.postValue(response.body());
+            }
+
+            @Override
+            public void onFailure(Call<PhoneResponse<EmployeePhoneModel>> call, Throwable t) {
+                PhoneResponse<EmployeePhoneModel> phoneResponse = new PhoneResponse<>();
+                phoneResponse.setError(t.getMessage());
+                phoneResponse.setResult(false);
+                mutableLiveData.postValue(phoneResponse);
+            }
+        });
     }
 
     private boolean isNetworkAvailable(Context context) {

@@ -12,5 +12,5 @@ public interface RepositoryService {
 
     void logIn(String email, String idDevice, MutableLiveData<ResponseString<String>> responseStringMutableLiveData);
     void getListOrganization(String token, MutableLiveData<PhoneResponse<EmployeeOrganizationModel>> mutableLiveDataResponseOrganization);
-    PhoneResponse<EmployeePhoneModel> getAllPhonesLastUpdate(String token);
+    void getAllPhonesLastUpdate(String token, MutableLiveData<PhoneResponse<EmployeePhoneModel>> mutableLiveData);
 }

@@ -23,19 +23,30 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
 import net.steamcrafted.loadtoast.LoadToast;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import ua.in.ukravto.kb.R;
 import ua.in.ukravto.kb.adapters.ListOrganizationRecyclerAdapter;
 import ua.in.ukravto.kb.databinding.ActivitySelectOrganizationBinding;
 import ua.in.ukravto.kb.repository.database.model.EmployeeOrganizationModel;
+import ua.in.ukravto.kb.repository.database.model.EmployeePhoneModel;
 import ua.in.ukravto.kb.repository.database.model.PhoneResponse;
+import ua.in.ukravto.kb.repository.service.RetrofitHelper;
+import ua.in.ukravto.kb.utils.ContactsManager;
 import ua.in.ukravto.kb.utils.Pref;
 import ua.in.ukravto.kb.viewmodel.SelectOrganizationViewModel;
 
@@ -104,12 +115,49 @@ public class SelectOrganizationActivity extends AppCompatActivity {
                 if (PERMISSION_READ_STATE_GRANTED) {
                     List<EmployeeOrganizationModel> listSave = mViewModel.saveOrganizationForSync(listOrganization);
                     if (listSave.size() > 0) {
-                        addAccount(new Account(getString(R.string.custom_account), getString(R.string.ACCOUNT_TYPE)));
+                        Account acc = new Account(getString(R.string.custom_account), getString(R.string.ACCOUNT_TYPE));
+                        addAccount(acc);
+                        syncNow(acc);
                     }
                     finish();
                 }
             }
         });
+    }
+
+    private void syncNow(final Account account){
+        String token = Pref.getInstance(this).getString(Pref.USER_TOKEN,"");
+        if (TextUtils.isEmpty(token)){
+            return;
+        }
+
+        Gson mGson = new Gson();
+        String organizationsString = Pref.getInstance(this).getString(Pref.SAVED_ORGANIZATIONS,"");
+        Type type = new TypeToken<List<EmployeeOrganizationModel>>(){}.getType();
+        List<EmployeeOrganizationModel> listSavedOrganization = mGson.fromJson(organizationsString, type);
+        if (listSavedOrganization == null){
+            listSavedOrganization = new ArrayList<>();
+        }
+
+        for (final EmployeeOrganizationModel organizationModel : listSavedOrganization) {
+            RetrofitHelper.getPhoneService().getOrganizationIDPhonesLastUpdate(organizationModel.getID(), token).enqueue(new Callback<PhoneResponse<EmployeePhoneModel>>() {
+                @Override
+                public void onResponse(Call<PhoneResponse<EmployeePhoneModel>> call, Response<PhoneResponse<EmployeePhoneModel>> response) {
+                    Log.d("IS_Successful:", String.valueOf(response.isSuccessful()));
+                    if (response.isSuccessful()){
+                        if (response.body() != null) {
+                            Log.d("LIST_SIZE_PHONES_ORG:", String.valueOf(response.body().getBody().size()));
+                            ContactsManager.syncContacts(getApplicationContext(), account, response.body().getBody());
+                        }
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<PhoneResponse<EmployeePhoneModel>> call, Throwable t) {
+                    Log.d("LIST_SIZE", t.getMessage());
+                }
+            });
+        }
     }
 
     private void checkPermissionContacts() {
@@ -122,6 +170,8 @@ public class SelectOrganizationActivity extends AppCompatActivity {
                     Manifest.permission.READ_CONTACTS,
                     Manifest.permission.WRITE_SYNC_SETTINGS}, REQUEST_PERMISSIONS_CONTACTS);
 
+        }else {
+            PERMISSION_READ_STATE_GRANTED = true;
         }
     }
 
@@ -177,13 +227,23 @@ public class SelectOrganizationActivity extends AppCompatActivity {
 
         if (requestCode == REQUEST_PERMISSIONS_CONTACTS) {
 
-//            grantResults.fo
+            PERMISSION_READ_STATE_GRANTED = true;
 
-            if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+            List<String> permisionsDenide = new ArrayList<>();
 
+            for (int i = 0; i < grantResults.length; i++) {
+                int grantResult = grantResults[i];
+                String permission = permissions[i];
+                if (grantResult != PackageManager.PERMISSION_GRANTED){
+                    permisionsDenide.add(permission);
+                }
+            }
+
+            if (permisionsDenide.size() > 0){
+                PERMISSION_READ_STATE_GRANTED = false;
                 new AlertDialog.Builder(SelectOrganizationActivity.this)
                         .setMessage("This permission is required for the correct operation of the application!")
-                        .setPositiveButton("yes", new DialogInterface.OnClickListener() {
+                        .setPositiveButton("retry", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 if (ActivityCompat.shouldShowRequestPermissionRationale(SelectOrganizationActivity.this, Manifest.permission.WRITE_CONTACTS) ||
@@ -198,14 +258,12 @@ public class SelectOrganizationActivity extends AppCompatActivity {
                                 }
                             }
                         })
-                        .setNegativeButton("no", new DialogInterface.OnClickListener() {
+                        .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 dialogInterface.dismiss();
                             }
                         }).show();
-            }else {
-                PERMISSION_READ_STATE_GRANTED = true;
             }
         }
     }
