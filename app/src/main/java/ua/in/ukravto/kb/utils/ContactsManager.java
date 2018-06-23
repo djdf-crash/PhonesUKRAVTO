@@ -25,10 +25,10 @@ public class ContactsManager {
         final ContactOperations contactOp = ContactOperations.createNewContact(
                 context, rawContact.getID(), account.name, inSync, batchOperation);
 
-        contactOp.addName(rawContact.getFullName(), "","")
+        contactOp.addName(rawContact.getFullName())
                 .addEmail(rawContact.getEmail())
                 .addPhone(rawContact.getRealPhone(), ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE)
-                .addOrganization(rawContact.getOrganizationName())
+                //.addOrganization(rawContact.getOrganizationName());
                 .addPost(rawContact.getPost(), ContactsContract.CommonDataKinds.StructuredPostal.TYPE_WORK);
     }
 
@@ -51,9 +51,7 @@ public class ContactsManager {
         final Cursor c =
                 resolver.query(DataQuery.CONTENT_URI, DataQuery.PROJECTION, DataQuery.SELECTION,
                         new String[] {String.valueOf(rawContactId)}, null);
-        final ContactOperations contactOp =
-                ContactOperations.updateExistingContact(context, rawContactId,
-                        inSync, batchOperation);
+        final ContactOperations contactOp = ContactOperations.updateExistingContact(context, rawContactId, inSync, batchOperation);
         try {
             // Iterate over the existing rows of data, and update each one
             // with the information we received from the server.
@@ -101,18 +99,18 @@ public class ContactsManager {
             contactOp.addPhone(rawContact.getRealPhone(), ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE);
         }
 
-        if (!existingOrganizationName){
-            contactOp.addOrganization(rawContact.getOrganizationName());
-        }
+//        if (!existingOrganizationName){
+//            contactOp.addOrganization(rawContact.getOrganizationName());
+//        }
 
         // Add the email address, if present and not updated above
         if (!existingEmail) {
             contactOp.addEmail(rawContact.getEmail());
         }
 
-        if (!existingPostName){
-            contactOp.addPost(rawContact.getPost(), ContactsContract.CommonDataKinds.StructuredPostal.TYPE_WORK);
-        }
+//        if (!existingPostName){
+//            contactOp.addPost(rawContact.getPost(), ContactsContract.CommonDataKinds.StructuredPostal.TYPE_WORK);
+//        }
         // If we need to update the serverId of the contact record, take
         // care of that.  This will happen if the contact is created on the
         // client, and then synced to the server. When we get the updated
@@ -141,28 +139,48 @@ public class ContactsManager {
         final ContentResolver resolver = context.getContentResolver();
         final BatchOperation batchOperation = new BatchOperation(context, resolver);
 
-        for (EmployeePhoneModel rawContact : employees) {
+        EmployeePhoneModel rawContact = employees.get(1);
 
-            final long rawContactId;
+        final long rawContactId;
 
-            long serverContactId = rawContact.getID();
-            rawContactId = lookupRawContact(resolver, serverContactId);
+        long serverContactId = rawContact.getID();
+        rawContactId = lookupRawContact(resolver, serverContactId);
 
-            if (rawContactId != 0) {
-                if (!rawContact.isDelete()) {
-                    updateContact(context, resolver, rawContact, false,
-                            true, rawContactId, batchOperation);
-                } else {
-                    deleteContact(context, rawContactId, batchOperation);
-                }
+        if (rawContactId != 0) {
+            if (!rawContact.isDelete()) {
+                updateContact(context, resolver, rawContact, false,
+                        true, rawContactId, batchOperation);
             } else {
-                Log.d(TAG, "In addContact");
-                if (!rawContact.isDelete()) {
-                    addContact(context, account, rawContact, true, batchOperation);
-                }
+                deleteContact(context, rawContactId, batchOperation);
             }
-
+        } else {
+            Log.d(TAG, "In addContact");
+            if (!rawContact.isDelete()) {
+                addContact(context, account, rawContact, true, batchOperation);
+            }
         }
+//        for (EmployeePhoneModel rawContact : employees) {
+//
+//            final long rawContactId;
+//
+//            long serverContactId = rawContact.getID();
+//            rawContactId = lookupRawContact(resolver, serverContactId);
+//
+//            if (rawContactId != 0) {
+//                if (!rawContact.isDelete()) {
+//                    updateContact(context, resolver, rawContact, false,
+//                            true, rawContactId, batchOperation);
+//                } else {
+//                    deleteContact(context, rawContactId, batchOperation);
+//                }
+//            } else {
+//                Log.d(TAG, "In addContact");
+//                if (!rawContact.isDelete()) {
+//                    addContact(context, account, rawContact, true, batchOperation);
+//                }
+//            }
+//            break;
+//        }
 
         batchOperation.execute();
 
@@ -200,7 +218,6 @@ public class ContactsManager {
         };
 
         final static int COLUMN_RAW_CONTACT_ID = 0;
-        final static int COLUMN_LINKED_CONTACT_ID = 1;
 
         final static Uri CONTENT_URI = ContactsContract.RawContacts.CONTENT_URI;
 

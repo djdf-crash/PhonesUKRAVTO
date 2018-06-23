@@ -94,33 +94,13 @@ public class ContactOperations {
         mRawContactId = rawContactId;
     }
 
-    /**
-     * Adds a contact name. We can take either a full name ("Bob Smith") or separated
-     * first-name and last-name ("Bob" and "Smith").
-     *
-     * @param fullName The full name of the contact - typically from an edit form
-     *      Can be null if firstName/lastName are specified.
-     * @param firstName The first name of the contact - can be null if fullName
-     *      is specified.
-     * @param lastName The last name of the contact - can be null if fullName
-     *      is specified.
-     * @return instance of ContactOperations
-     */
-    public ContactOperations addName(String fullName, String firstName, String lastName) {
+
+    public ContactOperations addName(String fullName) {
         mValues.clear();
 
         if (!TextUtils.isEmpty(fullName)) {
             mValues.put(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, fullName);
             mValues.put(ContactsContract.CommonDataKinds.StructuredName.MIMETYPE, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE);
-        } else {
-            if (!TextUtils.isEmpty(firstName)) {
-                mValues.put(ContactsContract.CommonDataKinds.StructuredName.GIVEN_NAME, firstName);
-                mValues.put(ContactsContract.CommonDataKinds.StructuredName.MIMETYPE, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE);
-            }
-            if (!TextUtils.isEmpty(lastName)) {
-                mValues.put(ContactsContract.CommonDataKinds.StructuredName.FAMILY_NAME, lastName);
-                mValues.put(ContactsContract.CommonDataKinds.StructuredName.MIMETYPE, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE);
-            }
         }
         if (mValues.size() > 0) {
             addInsertOp();

@@ -119,7 +119,7 @@ public class SelectOrganizationActivity extends AppCompatActivity {
                         addAccount(acc);
                         syncNow(acc);
                     }
-                    finish();
+                    //finish();
                 }
             }
         });
