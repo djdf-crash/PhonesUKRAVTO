@@ -27,4 +27,7 @@ public interface PhoneService {
 
     @POST("user/token")
     Call<ResponseString<String>> logIn(@Query("email") String email, @Query("deviceid") String idDevice);
+
+    @GET("user/update")
+    void updateUser(@Header("token") String token);
 }
