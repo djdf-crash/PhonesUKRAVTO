@@ -46,10 +46,12 @@ import ua.in.ukravto.kb.repository.database.model.EmployeeOrganizationModel;
 import ua.in.ukravto.kb.repository.database.model.EmployeePhoneModel;
 import ua.in.ukravto.kb.repository.database.model.PhoneResponse;
 import ua.in.ukravto.kb.repository.service.RetrofitHelper;
+import ua.in.ukravto.kb.service.ContactsSyncAdapterService;
 import ua.in.ukravto.kb.utils.ContactsManager;
 import ua.in.ukravto.kb.utils.Pref;
 import ua.in.ukravto.kb.viewmodel.SelectOrganizationViewModel;
 
+import static ua.in.ukravto.kb.service.ContactsSyncAdapterService.SYNC_MARKER_KEY;
 import static ua.in.ukravto.kb.view.MainActivity.AUTHORITY;
 
 public class SelectOrganizationActivity extends AppCompatActivity {
@@ -117,7 +119,7 @@ public class SelectOrganizationActivity extends AppCompatActivity {
                     if (listSave.size() > 0) {
                         Account acc = new Account(getString(R.string.custom_account), getString(R.string.ACCOUNT_TYPE));
                         addAccount(acc);
-                        //syncNow(acc);
+                        syncNow(acc);
                     }
                     finish();
                 }
@@ -126,6 +128,9 @@ public class SelectOrganizationActivity extends AppCompatActivity {
     }
 
     private void syncNow(final Account account){
+        final AccountManager accountManager = AccountManager.get(getApplicationContext());
+        final long lastSyncMarker = getServerSyncMarker(accountManager, account);
+
         String token = Pref.getInstance(this).getString(Pref.USER_TOKEN,"");
         if (TextUtils.isEmpty(token)){
             return;
@@ -147,7 +152,8 @@ public class SelectOrganizationActivity extends AppCompatActivity {
                     if (response.isSuccessful()){
                         if (response.body() != null) {
                             Log.d("LIST_SIZE_PHONES_ORG:", String.valueOf(response.body().getBody().size()));
-                            ContactsManager.syncContacts(getApplicationContext(), account, response.body().getBody(),0);
+                            long newSyncState = ContactsManager.syncContacts(getApplicationContext(), account, response.body().getBody(),lastSyncMarker);
+                            setServerSyncMarker(accountManager, account, newSyncState);
                         }
                     }
                 }
@@ -158,6 +164,18 @@ public class SelectOrganizationActivity extends AppCompatActivity {
                 }
             });
         }
+    }
+
+    private static long getServerSyncMarker(AccountManager mAccountManager, Account account) {
+        String markerString = mAccountManager.getUserData(account, SYNC_MARKER_KEY);
+        if (!TextUtils.isEmpty(markerString)) {
+            return Long.parseLong(markerString);
+        }
+        return 0;
+    }
+
+    private static void setServerSyncMarker(AccountManager mAccountManager, Account account, long marker) {
+        mAccountManager.setUserData(account, SYNC_MARKER_KEY, Long.toString(marker));
     }
 
     private void checkPermissionContacts() {
