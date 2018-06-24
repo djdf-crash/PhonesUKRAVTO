@@ -22,7 +22,7 @@ public class BatchOperation {
 
     public BatchOperation(Context context, ContentResolver resolver) {
         mResolver = resolver;
-        mOperations = new ArrayList<ContentProviderOperation>();
+        mOperations = new ArrayList<>();
     }
 
     public int size() {

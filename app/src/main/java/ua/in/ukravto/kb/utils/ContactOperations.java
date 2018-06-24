@@ -141,7 +141,7 @@ public class ContactOperations {
     public ContactOperations addOrganization(String orgName) {
         mValues.clear();
         if (!TextUtils.isEmpty(orgName)) {
-            mValues.put(ContactsContract.CommonDataKinds.Organization.DATA, orgName);
+            mValues.put(ContactsContract.CommonDataKinds.Organization.COMPANY, orgName);
             mValues.put(ContactsContract.CommonDataKinds.Organization.TYPE, ContactsContract.CommonDataKinds.Organization.TYPE_OTHER);
             mValues.put(ContactsContract.CommonDataKinds.Organization.MIMETYPE, ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE);
             addInsertOp();
@@ -150,12 +150,12 @@ public class ContactOperations {
     }
 
 
-    public ContactOperations addPost(String postName, int postType) {
+    public ContactOperations addPost(String postName) {
         mValues.clear();
         if (!TextUtils.isEmpty(postName)) {
-            mValues.put(ContactsContract.CommonDataKinds.StructuredPostal.DISPLAY_NAME, postName);
-            mValues.put(ContactsContract.CommonDataKinds.StructuredPostal.TYPE, postType);
-            mValues.put(ContactsContract.CommonDataKinds.StructuredPostal.MIMETYPE, ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_ITEM_TYPE);
+            mValues.put(ContactsContract.CommonDataKinds.Organization.TITLE, postName);
+            mValues.put(ContactsContract.CommonDataKinds.Organization.TYPE, ContactsContract.CommonDataKinds.Organization.TYPE_OTHER);
+            mValues.put(ContactsContract.CommonDataKinds.Organization.MIMETYPE, ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE);
             addInsertOp();
         }
         return this;
@@ -171,6 +171,13 @@ public class ContactOperations {
     public ContactOperations updateServerId(long serverId, Uri uri) {
         mValues.clear();
         mValues.put(ContactsContract.RawContacts.SOURCE_ID, serverId);
+        addUpdateOp(uri);
+        return this;
+    }
+
+    public ContactOperations updateIsDelete(int isDeleted, Uri uri) {
+        mValues.clear();
+        mValues.put(ContactsContract.RawContacts.DELETED, isDeleted);
         addUpdateOp(uri);
         return this;
     }
@@ -236,7 +243,21 @@ public class ContactOperations {
         mValues.clear();
         if (!TextUtils.isEmpty(post)) {
             if (!TextUtils.equals(existingPost, post)) {
-                mValues.put(ContactsContract.CommonDataKinds.StructuredPostal.DISPLAY_NAME, post);
+                mValues.put(ContactsContract.CommonDataKinds.Organization.TITLE, post);
+            }
+        }
+        if (mValues.size() > 0) {
+            addUpdateOp(uri);
+        }
+        return this;
+    }
+
+    public ContactOperations updateOrganization(Uri uri, String existingOrg, String nameOrganization) {
+
+        mValues.clear();
+        if (!TextUtils.isEmpty(nameOrganization)) {
+            if (!TextUtils.equals(existingOrg, nameOrganization)) {
+                mValues.put(ContactsContract.CommonDataKinds.Organization.COMPANY, nameOrganization);
             }
         }
         if (mValues.size() > 0) {

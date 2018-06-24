@@ -7,11 +7,11 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.ContactsContract;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.util.List;
 
-import ua.in.ukravto.kb.R;
 import ua.in.ukravto.kb.repository.database.model.EmployeePhoneModel;
 
 import static android.support.constraint.Constraints.TAG;
@@ -28,8 +28,8 @@ public class ContactsManager {
         contactOp.addName(rawContact.getFullName())
                 .addEmail(rawContact.getEmail())
                 .addPhone(rawContact.getRealPhone(), ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE)
-                //.addOrganization(rawContact.getOrganizationName());
-                .addPost(rawContact.getPost(), ContactsContract.CommonDataKinds.StructuredPostal.TYPE_WORK);
+                .addOrganization(rawContact.getOrganizationName())
+                .addPost(rawContact.getPost());
     }
 
     private static void deleteContact(Context context, long rawContactId, BatchOperation batchOperation) {
@@ -44,6 +44,7 @@ public class ContactsManager {
                                      boolean inSync, long rawContactId, BatchOperation batchOperation) {
 
         boolean existingCellPhone = false;
+        boolean existingFullName = false;
         boolean existingOrganizationName = false;
         boolean existingPostName = false;
         boolean existingEmail = false;
@@ -60,6 +61,7 @@ public class ContactsManager {
                 final String mimeType = c.getString(DataQuery.COLUMN_MIMETYPE);
                 final Uri uri = ContentUris.withAppendedId(ContactsContract.Data.CONTENT_URI, id);
                 if (mimeType.equals(ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)) {
+                    existingFullName = true;
                     contactOp.updateName(uri,
                             c.getString(DataQuery.COLUMN_GIVEN_NAME),
                             c.getString(DataQuery.COLUMN_FAMILY_NAME),
@@ -79,14 +81,13 @@ public class ContactsManager {
                     contactOp.updateEmail(rawContact.getEmail(),
                             c.getString(DataQuery.COLUMN_EMAIL_ADDRESS), uri);
                 }else if (mimeType.equals(ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE)){
-                    existingOrganizationName = true;
-                    contactOp.updateEmail(rawContact.getOrganizationName(),
-                            c.getString(DataQuery.COLUMN_ORGANIZATION_NAME), uri);
-                } else if (mimeType.equals(ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_ITEM_TYPE)) {
-                    final int type = c.getInt(DataQuery.COLUMN_PHONE_TYPE);
-                    if (type == ContactsContract.CommonDataKinds.StructuredPostal.TYPE_WORK) {
+                    if (!TextUtils.isEmpty(c.getString(DataQuery.COLUMN_ORGANIZATION_NAME))) {
+                        existingOrganizationName = true;
+                        contactOp.updateOrganization(uri, c.getString(DataQuery.COLUMN_ORGANIZATION_NAME), rawContact.getOrganizationName());
+                    }
+                    if (!TextUtils.isEmpty(c.getString(DataQuery.COLUMN_ORGANIZATION_POST))){
                         existingPostName = true;
-                        contactOp.updatePostName(uri, c.getString(DataQuery.COLUMN_POST_NAME), rawContact.getPost());
+                        contactOp.updatePostName(uri, c.getString(DataQuery.COLUMN_ORGANIZATION_POST), rawContact.getPost());
                     }
                 }
             } // while
@@ -94,23 +95,27 @@ public class ContactsManager {
             c.close();
         }
 
+        if (!existingFullName){
+            contactOp.addName(rawContact.getFullName());
+        }
+
         // Add the cell phone, if present and not updated above
         if (!existingCellPhone) {
             contactOp.addPhone(rawContact.getRealPhone(), ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE);
         }
 
-//        if (!existingOrganizationName){
-//            contactOp.addOrganization(rawContact.getOrganizationName());
-//        }
+        if (!existingOrganizationName){
+            contactOp.addOrganization(rawContact.getOrganizationName());
+        }
 
         // Add the email address, if present and not updated above
         if (!existingEmail) {
             contactOp.addEmail(rawContact.getEmail());
         }
 
-//        if (!existingPostName){
-//            contactOp.addPost(rawContact.getPost(), ContactsContract.CommonDataKinds.StructuredPostal.TYPE_WORK);
-//        }
+        if (!existingPostName){
+            contactOp.addPost(rawContact.getPost());
+        }
         // If we need to update the serverId of the contact record, take
         // care of that.  This will happen if the contact is created on the
         // client, and then synced to the server. When we get the updated
@@ -132,61 +137,45 @@ public class ContactsManager {
 //        }
     }
 
-    public static void syncContacts(Context context, Account account, List<EmployeePhoneModel> employees) {
+    public static long syncContacts(Context context, Account account, List<EmployeePhoneModel> employees, long lastSyncMarker) {
 
         mAccount = account;
+        long currentSyncMarker = lastSyncMarker;
 
         final ContentResolver resolver = context.getContentResolver();
         final BatchOperation batchOperation = new BatchOperation(context, resolver);
 
-        EmployeePhoneModel rawContact = employees.get(1);
+        for (EmployeePhoneModel rawContact : employees) {
+            final long rawContactId;
 
-        final long rawContactId;
-
-        long serverContactId = rawContact.getID();
-        rawContactId = lookupRawContact(resolver, serverContactId);
-
-        if (rawContactId != 0) {
-            if (!rawContact.isDelete()) {
-                updateContact(context, resolver, rawContact, false,
-                        true, rawContactId, batchOperation);
-            } else {
-                deleteContact(context, rawContactId, batchOperation);
+            if (DataTimeUtils.getMillis(rawContact.getLastUpdate()) > currentSyncMarker) {
+                currentSyncMarker = DataTimeUtils.getMillis(rawContact.getLastUpdate());
             }
-        } else {
-            Log.d(TAG, "In addContact");
-            if (!rawContact.isDelete()) {
-                addContact(context, account, rawContact, true, batchOperation);
+
+            long serverContactId = rawContact.getID();
+            rawContactId = lookupRawContact(context, resolver, serverContactId);
+
+            if (rawContactId != 0) {
+                if (!rawContact.isDelete()) {
+                    updateContact(context, resolver, rawContact, false,
+                            true, rawContactId, batchOperation);
+                } else {
+                    deleteContact(context, rawContactId, batchOperation);
+                }
+            } else {
+                Log.d(TAG, "In addContact");
+                if (!rawContact.isDelete()) {
+                    addContact(context, account, rawContact, true, batchOperation);
+                }
             }
         }
-//        for (EmployeePhoneModel rawContact : employees) {
-//
-//            final long rawContactId;
-//
-//            long serverContactId = rawContact.getID();
-//            rawContactId = lookupRawContact(resolver, serverContactId);
-//
-//            if (rawContactId != 0) {
-//                if (!rawContact.isDelete()) {
-//                    updateContact(context, resolver, rawContact, false,
-//                            true, rawContactId, batchOperation);
-//                } else {
-//                    deleteContact(context, rawContactId, batchOperation);
-//                }
-//            } else {
-//                Log.d(TAG, "In addContact");
-//                if (!rawContact.isDelete()) {
-//                    addContact(context, account, rawContact, true, batchOperation);
-//                }
-//            }
-//            break;
-//        }
 
         batchOperation.execute();
 
+        return currentSyncMarker;
     }
 
-    private static long lookupRawContact(ContentResolver resolver, long serverContactId) {
+    private static long lookupRawContact(Context context, ContentResolver resolver, long serverContactId) {
 
         long rawContactId = 0;
         final Cursor c = resolver.query(
@@ -197,7 +186,14 @@ public class ContactsManager {
                 null);
         try {
             if ((c != null) && c.moveToFirst()) {
-                rawContactId = c.getLong(UserIdQuery.COLUMN_RAW_CONTACT_ID);
+                do {
+                    if (c.getInt(UserIdQuery.COLUMN_RAW_DELETED) == 1) {
+                        //restoreContact(context, rawContactId);
+                    }else {
+                        rawContactId = c.getLong(UserIdQuery.COLUMN_RAW_CONTACT_ID);
+                        break;
+                    }
+                }while (c.moveToNext());
             }
         } finally {
             if (c != null) {
@@ -207,6 +203,15 @@ public class ContactsManager {
         return rawContactId;
     }
 
+    private static void restoreContact(Context context, long rawContactId) {
+        final ContentResolver resolver = context.getContentResolver();
+        final BatchOperation batchOperation = new BatchOperation(context, resolver);
+        final ContactOperations contactOp = ContactOperations.updateExistingContact(context, rawContactId, true, batchOperation);
+        final Uri uri = ContentUris.withAppendedId(ContactsContract.Data.CONTENT_URI, rawContactId);
+        contactOp.updateIsDelete(0, uri);
+        batchOperation.execute();
+    }
+
     final private static class UserIdQuery {
 
         private UserIdQuery() {
@@ -214,10 +219,12 @@ public class ContactsManager {
 
         final static String[] PROJECTION = new String[] {
                 ContactsContract.RawContacts._ID,
-                ContactsContract.RawContacts.CONTACT_ID
+                ContactsContract.RawContacts.CONTACT_ID,
+                ContactsContract.RawContacts.DELETED
         };
 
         final static int COLUMN_RAW_CONTACT_ID = 0;
+        final static int COLUMN_RAW_DELETED = 2;
 
         final static Uri CONTENT_URI = ContactsContract.RawContacts.CONTENT_URI;
 
@@ -233,7 +240,7 @@ public class ContactsManager {
 
         static final String[] PROJECTION =
                 new String[] {ContactsContract.RawContacts.Data._ID, ContactsContract.RawContacts.SOURCE_ID, ContactsContract.RawContacts.Data.MIMETYPE, ContactsContract.RawContacts.Data.DATA1,
-                        ContactsContract.RawContacts.Data.DATA2, ContactsContract.RawContacts.Data.DATA3, ContactsContract.RawContacts.Data.DATA15, ContactsContract.RawContacts.Data.SYNC1};
+                        ContactsContract.RawContacts.Data.DATA2, ContactsContract.RawContacts.Data.DATA3, ContactsContract.RawContacts.Data.DATA4, ContactsContract.RawContacts.Data.DATA15, ContactsContract.RawContacts.Data.SYNC1};
 
         static final int COLUMN_ID = 0;
         public static final int COLUMN_SERVER_ID = 1;
@@ -241,8 +248,9 @@ public class ContactsManager {
         static final int COLUMN_DATA1 = 3;
         static final int COLUMN_DATA2 = 4;
         static final int COLUMN_DATA3 = 5;
-        public static final int COLUMN_DATA15 = 6;
-        static final int COLUMN_SYNC1 = 7;
+        static final int COLUMN_DATA4 = 6;
+        public static final int COLUMN_DATA15 = 7;
+        static final int COLUMN_SYNC1 = 8;
 
         static final Uri CONTENT_URI = ContactsContract.Data.CONTENT_URI;
 
@@ -252,7 +260,8 @@ public class ContactsManager {
         static final int COLUMN_FULL_NAME = COLUMN_DATA1;
         static final int COLUMN_GIVEN_NAME = COLUMN_DATA2;
         static final int COLUMN_FAMILY_NAME = COLUMN_DATA3;
-        static final int COLUMN_ORGANIZATION_NAME = COLUMN_DATA2;
+        static final int COLUMN_ORGANIZATION_NAME = COLUMN_DATA1;
+        static final int COLUMN_ORGANIZATION_POST = COLUMN_DATA4;
         static final int COLUMN_POST_NAME = COLUMN_DATA2;
 
         static final String SELECTION = ContactsContract.RawContacts.Data.RAW_CONTACT_ID + "=?";

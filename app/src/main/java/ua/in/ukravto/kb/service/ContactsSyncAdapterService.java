@@ -1,6 +1,7 @@
 package ua.in.ukravto.kb.service;
 
 import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.arch.lifecycle.LifecycleService;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
@@ -34,6 +35,7 @@ public class ContactsSyncAdapterService extends LifecycleService {
     private static final String TAG = "ContactsSyncAdapterS";
     private static ContentResolver mContentResolver = null;
     private static SyncAdapterImpl sSyncAdapter = null;
+    private static final String SYNC_MARKER_KEY = "ua.in.ukravto.kb.samplesync.marker";
 
 
     public IBinder onBind(Intent intent) {
@@ -48,12 +50,17 @@ public class ContactsSyncAdapterService extends LifecycleService {
         return sSyncAdapter;
     }
 
-    private static void performSync(final Context context, final Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
+    private static void performSync(final Context context, AccountManager accountManager ,final Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
         Log.d(TAG, "performSync: " + account.toString());
+
+        final long lastSyncMarker = getServerSyncMarker(accountManager, account);
+        long newSyncState = lastSyncMarker;
+
         String token = Pref.getInstance(context).getString(Pref.USER_TOKEN,"");
         if (TextUtils.isEmpty(token)){
             return;
         }
+
 
         Gson mGson = new Gson();
         String organizationsString = Pref.getInstance(context).getString(Pref.SAVED_ORGANIZATIONS,"");
@@ -71,7 +78,7 @@ public class ContactsSyncAdapterService extends LifecycleService {
                     if (response.isSuccessful()){
                         if (response.body() != null) {
                             Log.d("LIST_SIZE_PHONES_ORG:", String.valueOf(response.body().getBody().size()));
-                            ContactsManager.syncContacts(context, account, response.body().getBody());
+                            long newSyncState = ContactsManager.syncContacts(context, account, response.body().getBody(), lastSyncMarker);
                         }
                     }
                 }
@@ -82,19 +89,35 @@ public class ContactsSyncAdapterService extends LifecycleService {
                 }
             });
         }
+
+        setServerSyncMarker(accountManager, account, newSyncState);
+    }
+
+    private static long getServerSyncMarker(AccountManager mAccountManager, Account account) {
+        String markerString = mAccountManager.getUserData(account, SYNC_MARKER_KEY);
+        if (!TextUtils.isEmpty(markerString)) {
+            return Long.parseLong(markerString);
+        }
+        return 0;
+    }
+
+    private static void setServerSyncMarker(AccountManager mAccountManager, Account account, long marker) {
+        mAccountManager.setUserData(account, SYNC_MARKER_KEY, Long.toString(marker));
     }
 
     private static class SyncAdapterImpl extends AbstractThreadedSyncAdapter {
         private Context mContext;
+        private AccountManager mAccountManager;
 
         public SyncAdapterImpl(Context context) {
             super(context, true);
             this.mContext = context;
+            mAccountManager = AccountManager.get(context);
         }
 
         @Override
         public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
-            performSync(this.mContext, account, extras, authority, provider, syncResult);
+            performSync(this.mContext, mAccountManager, account, extras, authority, provider, syncResult);
             Log.d(ContactsSyncAdapterService.TAG, syncResult.toDebugString());
         }
     }

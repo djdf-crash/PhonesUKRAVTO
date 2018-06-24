@@ -117,9 +117,9 @@ public class SelectOrganizationActivity extends AppCompatActivity {
                     if (listSave.size() > 0) {
                         Account acc = new Account(getString(R.string.custom_account), getString(R.string.ACCOUNT_TYPE));
                         addAccount(acc);
-                        syncNow(acc);
+                        //syncNow(acc);
                     }
-                    //finish();
+                    finish();
                 }
             }
         });
@@ -147,7 +147,7 @@ public class SelectOrganizationActivity extends AppCompatActivity {
                     if (response.isSuccessful()){
                         if (response.body() != null) {
                             Log.d("LIST_SIZE_PHONES_ORG:", String.valueOf(response.body().getBody().size()));
-                            ContactsManager.syncContacts(getApplicationContext(), account, response.body().getBody());
+                            ContactsManager.syncContacts(getApplicationContext(), account, response.body().getBody(),0);
                         }
                     }
                 }
