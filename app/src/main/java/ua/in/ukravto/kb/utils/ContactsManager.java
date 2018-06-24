@@ -28,8 +28,7 @@ public class ContactsManager {
         contactOp.addName(rawContact.getFullName())
                 .addEmail(rawContact.getEmail())
                 .addPhone(rawContact.getRealPhone(), ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE)
-                .addOrganization(rawContact.getOrganizationName())
-                .addPost(rawContact.getPost());
+                .addOrganizationAndPost(rawContact.getOrganizationName(), rawContact.getPost());
     }
 
     private static void deleteContact(Context context, long rawContactId, BatchOperation batchOperation) {
@@ -83,12 +82,15 @@ public class ContactsManager {
                 }else if (mimeType.equals(ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE)){
                     if (!TextUtils.isEmpty(c.getString(DataQuery.COLUMN_ORGANIZATION_NAME))) {
                         existingOrganizationName = true;
-                        contactOp.updateOrganization(uri, c.getString(DataQuery.COLUMN_ORGANIZATION_NAME), rawContact.getOrganizationName());
+                        contactOp.updateOrganizationAndPost(uri, c.getString(DataQuery.COLUMN_ORGANIZATION_NAME),
+                                c.getString(DataQuery.COLUMN_ORGANIZATION_POST),
+                                rawContact.getOrganizationName(),
+                                rawContact.getPost());
                     }
-                    if (!TextUtils.isEmpty(c.getString(DataQuery.COLUMN_ORGANIZATION_POST))){
-                        existingPostName = true;
-                        contactOp.updatePostName(uri, c.getString(DataQuery.COLUMN_ORGANIZATION_POST), rawContact.getPost());
-                    }
+//                    if (!TextUtils.isEmpty(c.getString(DataQuery.COLUMN_ORGANIZATION_POST))){
+//                        existingPostName = true;
+//                        contactOp.updatePostName(uri, c.getString(DataQuery.COLUMN_ORGANIZATION_POST), rawContact.getPost());
+//                    }
                 }
             } // while
         } finally {
@@ -105,7 +107,7 @@ public class ContactsManager {
         }
 
         if (!existingOrganizationName){
-            contactOp.addOrganization(rawContact.getOrganizationName());
+            contactOp.addOrganizationAndPost(rawContact.getOrganizationName(), rawContact.getPost());
         }
 
         // Add the email address, if present and not updated above
@@ -113,9 +115,9 @@ public class ContactsManager {
             contactOp.addEmail(rawContact.getEmail());
         }
 
-        if (!existingPostName){
-            contactOp.addPost(rawContact.getPost());
-        }
+//        if (!existingPostName){
+//            contactOp.addPost(rawContact.getPost());
+//        }
         // If we need to update the serverId of the contact record, take
         // care of that.  This will happen if the contact is created on the
         // client, and then synced to the server. When we get the updated

@@ -33,7 +33,7 @@ import ua.in.ukravto.kb.viewmodel.MainViewModel;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static final String AUTHORITY = "ua.in.ukravto.kb";
+    public static final String AUTHORITY = "com.android.contacts";
     private ActivityMainBinding mBinding;
     private MainViewModel mViewModel;
     private static final int PERMISSION_READ_STATE = 0;

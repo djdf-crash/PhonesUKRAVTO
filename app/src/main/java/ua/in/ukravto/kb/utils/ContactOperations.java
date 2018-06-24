@@ -138,10 +138,11 @@ public class ContactOperations {
         return this;
     }
 
-    public ContactOperations addOrganization(String orgName) {
+    public ContactOperations addOrganizationAndPost(String orgName, String post) {
         mValues.clear();
         if (!TextUtils.isEmpty(orgName)) {
             mValues.put(ContactsContract.CommonDataKinds.Organization.COMPANY, orgName);
+            mValues.put(ContactsContract.CommonDataKinds.Organization.TITLE, post);
             mValues.put(ContactsContract.CommonDataKinds.Organization.TYPE, ContactsContract.CommonDataKinds.Organization.TYPE_OTHER);
             mValues.put(ContactsContract.CommonDataKinds.Organization.MIMETYPE, ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE);
             addInsertOp();
@@ -252,12 +253,15 @@ public class ContactOperations {
         return this;
     }
 
-    public ContactOperations updateOrganization(Uri uri, String existingOrg, String nameOrganization) {
+    public ContactOperations updateOrganizationAndPost(Uri uri, String existingOrg, String existingPost, String nameOrganization, String post) {
 
         mValues.clear();
         if (!TextUtils.isEmpty(nameOrganization)) {
             if (!TextUtils.equals(existingOrg, nameOrganization)) {
                 mValues.put(ContactsContract.CommonDataKinds.Organization.COMPANY, nameOrganization);
+            }
+            if (!TextUtils.equals(existingPost, post)) {
+                mValues.put(ContactsContract.CommonDataKinds.Organization.TITLE, post);
             }
         }
         if (mValues.size() > 0) {
