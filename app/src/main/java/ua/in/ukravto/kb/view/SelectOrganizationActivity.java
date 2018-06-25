@@ -147,13 +147,28 @@ public class SelectOrganizationActivity extends AppCompatActivity {
         for (final EmployeeOrganizationModel organizationModel : listSavedOrganization) {
             RetrofitHelper.getPhoneService().getOrganizationIDPhonesLastUpdate(organizationModel.getID(), token).enqueue(new Callback<PhoneResponse<EmployeePhoneModel>>() {
                 @Override
-                public void onResponse(Call<PhoneResponse<EmployeePhoneModel>> call, Response<PhoneResponse<EmployeePhoneModel>> response) {
+                public void onResponse(Call<PhoneResponse<EmployeePhoneModel>> call, final Response<PhoneResponse<EmployeePhoneModel>> response) {
                     Log.d("IS_Successful:", String.valueOf(response.isSuccessful()));
                     if (response.isSuccessful()){
                         if (response.body() != null) {
                             Log.d("LIST_SIZE_PHONES_ORG:", String.valueOf(response.body().getBody().size()));
-                            long newSyncState = ContactsManager.syncContacts(getApplicationContext(), account, response.body().getBody(),lastSyncMarker);
-                            setServerSyncMarker(accountManager, account, newSyncState);
+                            new AlertDialog.Builder(SelectOrganizationActivity.this)
+                                    .setMessage("Do you want to update your phone directory now?")
+                                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialogInterface, int i) {
+                                            long newSyncState = ContactsManager.syncContacts(getApplicationContext(), account, response.body().getBody(),lastSyncMarker);
+                                            setServerSyncMarker(accountManager, account, newSyncState);
+                                            finish();
+                                        }
+                                    })
+                                    .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialogInterface, int i) {
+                                            dialogInterface.dismiss();
+                                            finish();
+                                        }
+                                    }).show();
                         }
                     }
                 }
