@@ -117,11 +117,25 @@ public class SelectOrganizationActivity extends AppCompatActivity {
                 if (PERMISSION_READ_STATE_GRANTED) {
                     List<EmployeeOrganizationModel> listSave = mViewModel.saveOrganizationForSync(listOrganization);
                     if (listSave.size() > 0) {
-                        Account acc = new Account(getString(R.string.custom_account), getString(R.string.ACCOUNT_TYPE));
+                        final Account acc = new Account(getString(R.string.custom_account), getString(R.string.ACCOUNT_TYPE));
                         addAccount(acc);
-                        syncNow(acc);
+                        new AlertDialog.Builder(SelectOrganizationActivity.this)
+                                .setMessage("Do you want to run sync now?")
+                                .setPositiveButton("retry", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                        syncNow(acc);
+                                        finish();
+                                    }
+                                })
+                                .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                        dialogInterface.dismiss();
+                                        finish();
+                                    }
+                                }).show();
                     }
-                    finish();
                 }
             }
         });
