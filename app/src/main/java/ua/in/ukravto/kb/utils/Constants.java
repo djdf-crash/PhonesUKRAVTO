@@ -1,5 +1,5 @@
 package ua.in.ukravto.kb.utils;
 
 public interface Constants {
-    String SERVICE_API = "http://176.36.225.134:7070/api/v1/";
+    String SERVICE_API = "http://35.234.94.146:7070/api/v1/";
 }

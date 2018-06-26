@@ -78,6 +78,7 @@ public class ContactsSyncAdapterService extends Service {
                             Log.d("LIST_SIZE_PHONES_ORG:", String.valueOf(response.body().getBody().size()));
                             long newSyncState = ContactsManager.syncContacts(context, account, response.body().getBody(), lastSyncMarker);
                             setServerSyncMarker(accountManager, account, newSyncState);
+                            //RetrofitHelper.getPhoneService().updateUser(token);
                         }
                     }
                 }
