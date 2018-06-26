@@ -5,4 +5,5 @@
     <string name="ACCOUNT_TYPE">ua.in.ukravto.kb</string>
     <string name="text_login">LogIn</string>
     <string name="select_none">Select none</string>
+    <string name="select_all">Select ALL</string>
 </resources>

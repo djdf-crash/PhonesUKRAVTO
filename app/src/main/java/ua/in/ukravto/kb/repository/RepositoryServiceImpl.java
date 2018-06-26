@@ -43,7 +43,7 @@ public class RepositoryServiceImpl implements RepositoryService {
             @Override
             public void onFailure(Call<ResponseString<String>> call, Throwable t) {
                 ResponseString<String> stringResponseString = new ResponseString<>();
-                stringResponseString.setError(t.getMessage());
+                stringResponseString.setError("Fail to load server!");
                 stringResponseString.setResult(false);
                 responseStringMutableLiveData.postValue(stringResponseString);
             }
@@ -77,7 +77,7 @@ public class RepositoryServiceImpl implements RepositoryService {
             @Override
             public void onFailure(Call<PhoneResponse<EmployeeOrganizationModel>> call, Throwable t) {
                 PhoneResponse<EmployeeOrganizationModel> phoneResponse = new PhoneResponse<>();
-                phoneResponse.setError(t.getMessage());
+                phoneResponse.setError("Fail to load server!");
                 phoneResponse.setResult(false);
                 mutableLiveDataResponseOrganization.postValue(phoneResponse);
             }
@@ -103,7 +103,7 @@ public class RepositoryServiceImpl implements RepositoryService {
             @Override
             public void onFailure(Call<PhoneResponse<EmployeePhoneModel>> call, Throwable t) {
                 PhoneResponse<EmployeePhoneModel> phoneResponse = new PhoneResponse<>();
-                phoneResponse.setError(t.getMessage());
+                phoneResponse.setError("Fail to load server!");
                 phoneResponse.setResult(false);
                 mutableLiveData.postValue(phoneResponse);
             }

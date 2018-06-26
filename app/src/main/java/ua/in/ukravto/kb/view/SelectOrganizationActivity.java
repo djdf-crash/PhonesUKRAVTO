@@ -120,8 +120,8 @@ public class SelectOrganizationActivity extends AppCompatActivity {
                         final Account acc = new Account(getString(R.string.custom_account), getString(R.string.ACCOUNT_TYPE));
                         addAccount(acc);
                         new AlertDialog.Builder(SelectOrganizationActivity.this)
-                                .setMessage("Do you want to run sync now?")
-                                .setPositiveButton("retry", new DialogInterface.OnClickListener() {
+                                .setMessage("Do you want to update your phone directory now?")
+                                .setPositiveButton("ok", new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialogInterface, int i) {
                                         syncNow(acc);
@@ -166,23 +166,8 @@ public class SelectOrganizationActivity extends AppCompatActivity {
                     if (response.isSuccessful()){
                         if (response.body() != null) {
                             Log.d("LIST_SIZE_PHONES_ORG:", String.valueOf(response.body().getBody().size()));
-                            new AlertDialog.Builder(SelectOrganizationActivity.this)
-                                    .setMessage("Do you want to update your phone directory now?")
-                                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialogInterface, int i) {
-                                            long newSyncState = ContactsManager.syncContacts(getApplicationContext(), account, response.body().getBody(),lastSyncMarker);
-                                            setServerSyncMarker(accountManager, account, newSyncState);
-                                            finish();
-                                        }
-                                    })
-                                    .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialogInterface, int i) {
-                                            dialogInterface.dismiss();
-                                            finish();
-                                        }
-                                    }).show();
+                            long newSyncState = ContactsManager.syncContacts(getApplicationContext(), account, response.body().getBody(),lastSyncMarker);
+                            setServerSyncMarker(accountManager, account, newSyncState);
                         }
                     }
                 }
