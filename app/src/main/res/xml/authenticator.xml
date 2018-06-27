@@ -2,6 +2,6 @@
 <account-authenticator
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:label="@string/custom_account"
-    android:icon="@mipmap/ic_launcher_foreground"
+    android:icon="@mipmap/ic_launcher"
     android:accountType="@string/ACCOUNT_TYPE"
-    android:smallIcon="@mipmap/ic_launcher_foreground" />
+    android:smallIcon="@mipmap/ic_launcher" />
