@@ -8,4 +8,6 @@
     <string name="select_all">Select ALL</string>
     <string name="summary_select_organization_for_sync">Setting selected organizations for sync</string>
     <string name="title_pref_organization">Settings organization</string>
+    <string name="action_search">search_organization</string>
+    <string name="search_hint">Search organization</string>
 </resources>

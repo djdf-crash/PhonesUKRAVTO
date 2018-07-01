@@ -25,6 +25,9 @@
         <activity android:name=".view.MainActivity" />
 
         <activity android:name=".view.SelectOrganizationActivity">
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/searchable" />
             <intent-filter>
                 <action android:name="ua.in.ukravto.kb.ACTION_SETTINGS_ACCOUNT" />
 

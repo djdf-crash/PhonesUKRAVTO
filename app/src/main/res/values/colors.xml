@@ -2,7 +2,7 @@
 <resources>
     <color name="colorPrimary">#1f2546</color>
     <color name="colorPrimaryDark">#111533</color>
-    <color name="colorAccent">#40f533</color>
+    <color name="colorAccent">#77228e</color>
     <color name="textAccent">#ffffff</color>
     <color name="btn_send_normal">#0e3e0a</color>
     <color name="fab_color_shadow">#12360d</color>
