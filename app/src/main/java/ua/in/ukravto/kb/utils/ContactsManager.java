@@ -165,7 +165,7 @@ public class ContactsManager {
                     deleteContact(context, rawContactId, batchOperation);
                 }
             } else {
-                Log.d(TAG, "In addContact");
+                Log.d(TAG, "In addContact: " + rawContact.getFullName() + " | org:" + rawContact.getOrganizationName());
                 if (!rawContact.isDelete()) {
                     addContact(context, account, rawContact, true, batchOperation);
                 }
@@ -211,6 +211,26 @@ public class ContactsManager {
         final ContactOperations contactOp = ContactOperations.updateExistingContact(context, rawContactId, true, batchOperation);
         final Uri uri = ContentUris.withAppendedId(ContactsContract.Data.CONTENT_URI, rawContactId);
         contactOp.updateIsDelete(0, uri);
+        batchOperation.execute();
+    }
+
+    public static void deleteContacts(Context context, Account account, List<EmployeePhoneModel> employees) {
+        mAccount = account;
+
+        final ContentResolver resolver = context.getContentResolver();
+        final BatchOperation batchOperation = new BatchOperation(context, resolver);
+
+        for (EmployeePhoneModel rawContact : employees) {
+            final long rawContactId;
+
+            long serverContactId = rawContact.getID();
+            rawContactId = lookupRawContact(context, resolver, serverContactId);
+
+            if (rawContactId != 0) {
+                deleteContact(context, rawContactId, batchOperation);
+            }
+        }
+
         batchOperation.execute();
     }
 

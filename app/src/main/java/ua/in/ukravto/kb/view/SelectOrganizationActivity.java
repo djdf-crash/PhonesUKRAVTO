@@ -13,12 +13,12 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.databinding.DataBindingUtil;
 import android.net.Uri;
+import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -46,7 +46,6 @@ import ua.in.ukravto.kb.repository.database.model.EmployeeOrganizationModel;
 import ua.in.ukravto.kb.repository.database.model.EmployeePhoneModel;
 import ua.in.ukravto.kb.repository.database.model.PhoneResponse;
 import ua.in.ukravto.kb.repository.service.RetrofitHelper;
-import ua.in.ukravto.kb.service.ContactsSyncAdapterService;
 import ua.in.ukravto.kb.utils.ContactsManager;
 import ua.in.ukravto.kb.utils.Pref;
 import ua.in.ukravto.kb.viewmodel.SelectOrganizationViewModel;
@@ -90,6 +89,28 @@ public class SelectOrganizationActivity extends AppCompatActivity {
         mLoadToast.setTranslationY(350);
         mLoadToast.show();
 
+        mToken = Pref.getInstance(getApplicationContext()).getString(Pref.USER_TOKEN, "");
+
+        mViewModel.getListOrganizations(mToken).observe(this, new Observer<PhoneResponse<EmployeeOrganizationModel>>() {
+            @Override
+            public void onChanged(@Nullable PhoneResponse<EmployeeOrganizationModel> employeeOrganizationModelPhoneResponse) {
+                if (employeeOrganizationModelPhoneResponse != null) {
+                    if (employeeOrganizationModelPhoneResponse.getResult() && TextUtils.isEmpty(employeeOrganizationModelPhoneResponse.getError())) {
+                        listOrganization = employeeOrganizationModelPhoneResponse.getBody();
+                        mAdapter = new ListOrganizationRecyclerAdapter();
+                        mViewModel.checkListOrganization(listOrganization);
+                        mAdapter.setData(listOrganization);
+                        mAdapter.notifyDataSetChanged();
+                        mBinding.recyclerListOrganization.setAdapter(mAdapter);
+                        mLoadToast.success();
+                    } else {
+                        Toast.makeText(getApplicationContext(), employeeOrganizationModelPhoneResponse.getError(), Toast.LENGTH_LONG).show();
+                        mLoadToast.error();
+                    }
+                }
+            }
+        });
+
         mBinding.btSelectAll.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -116,26 +137,9 @@ public class SelectOrganizationActivity extends AppCompatActivity {
                 checkPermissionContacts();
                 if (PERMISSION_READ_STATE_GRANTED) {
                     List<EmployeeOrganizationModel> listSave = mViewModel.saveOrganizationForSync(listOrganization);
-                    if (listSave.size() > 0) {
-                        final Account acc = new Account(getString(R.string.custom_account), getString(R.string.ACCOUNT_TYPE));
-                        addAccount(acc);
-                        new AlertDialog.Builder(SelectOrganizationActivity.this)
-                                .setMessage("Do you want to update your phone directory now?")
-                                .setPositiveButton("ok", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialogInterface, int i) {
-                                        syncNow(acc);
-                                        finish();
-                                    }
-                                })
-                                .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialogInterface, int i) {
-                                        dialogInterface.dismiss();
-                                        finish();
-                                    }
-                                }).show();
-                    }
+                    final Account acc = new Account(getString(R.string.custom_account), getString(R.string.ACCOUNT_TYPE));
+                    addAccount(acc);
+                    finish();
                 }
             }
         });
@@ -145,11 +149,13 @@ public class SelectOrganizationActivity extends AppCompatActivity {
         final AccountManager accountManager = AccountManager.get(getApplicationContext());
         final long lastSyncMarker = getServerSyncMarker(accountManager, account);
 
+        mLoadToast.setText("Sync contacts...");
+        mLoadToast.show();
+
         String token = Pref.getInstance(this).getString(Pref.USER_TOKEN,"");
         if (TextUtils.isEmpty(token)){
             return;
         }
-
         Gson mGson = new Gson();
         String organizationsString = Pref.getInstance(this).getString(Pref.SAVED_ORGANIZATIONS,"");
         Type type = new TypeToken<List<EmployeeOrganizationModel>>(){}.getType();
@@ -174,7 +180,7 @@ public class SelectOrganizationActivity extends AppCompatActivity {
 
                 @Override
                 public void onFailure(Call<PhoneResponse<EmployeePhoneModel>> call, Throwable t) {
-                    Log.d("LIST_SIZE", t.getMessage());
+
                 }
             });
         }
@@ -214,32 +220,6 @@ public class SelectOrganizationActivity extends AppCompatActivity {
             ContentResolver.setIsSyncable(account, AUTHORITY, 1);
             ContentResolver.setSyncAutomatically(account, AUTHORITY, true);
         }
-    }
-
-    @Override
-    protected void onStart() {
-        mToken = Pref.getInstance(getApplicationContext()).getString(Pref.USER_TOKEN, "");
-
-        mViewModel.getListOrganizations(mToken).observe(this, new Observer<PhoneResponse<EmployeeOrganizationModel>>() {
-            @Override
-            public void onChanged(@Nullable PhoneResponse<EmployeeOrganizationModel> employeeOrganizationModelPhoneResponse) {
-                if (employeeOrganizationModelPhoneResponse != null) {
-                    if (employeeOrganizationModelPhoneResponse.getResult() && TextUtils.isEmpty(employeeOrganizationModelPhoneResponse.getError())) {
-                        listOrganization = employeeOrganizationModelPhoneResponse.getBody();
-                        mAdapter = new ListOrganizationRecyclerAdapter();
-                        mViewModel.checkListOrganization(listOrganization);
-                        mAdapter.setData(listOrganization);
-                        mAdapter.notifyDataSetChanged();
-                        mBinding.recyclerListOrganization.setAdapter(mAdapter);
-                        mLoadToast.success();
-                    } else {
-                        Toast.makeText(getApplicationContext(), employeeOrganizationModelPhoneResponse.getError(), Toast.LENGTH_LONG).show();
-                        mLoadToast.error();
-                    }
-                }
-            }
-        });
-        super.onStart();
     }
 
     private void startAppSettingsConfigActivity() {

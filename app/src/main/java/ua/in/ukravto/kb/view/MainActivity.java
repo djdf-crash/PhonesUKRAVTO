@@ -65,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
             public void onChanged(@Nullable ResponseString<String> stringResponseString) {
                 if (stringResponseString != null && stringResponseString.getResult() && TextUtils.isEmpty(stringResponseString.getError())){
                     Pref.getInstance(getApplicationContext()).edit().putString(Pref.USER_TOKEN, stringResponseString.getBody()).apply();
+                    Pref.getInstance(getApplicationContext()).edit().putString(Pref.EMAIL, mBinding.editEmail.getEditableText().toString()).apply();
                     mLoadToast.success();
                     startActivity(new Intent(MainActivity.this, SelectOrganizationActivity.class));
                     finish();

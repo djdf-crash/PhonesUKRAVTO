@@ -11,6 +11,7 @@ public class Pref {
     public static final String EMAIL = "user_email";
     public static final String SAVED_ORGANIZATIONS = "saved_organizations";
     public static final String SYNC_ALL_ORGANIZATION = "sync_all_organization";
+    public static final String DELETE_ORGANIZATIONS = "deleted_organization";
     private static SharedPreferences sp;
 
     public static SharedPreferences getInstance(Context ctx){

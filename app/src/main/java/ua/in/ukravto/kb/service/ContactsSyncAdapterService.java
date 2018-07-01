@@ -17,8 +17,10 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import retrofit2.Call;
@@ -49,10 +51,11 @@ public class ContactsSyncAdapterService extends Service {
         return sSyncAdapter;
     }
 
-    public static void performSync(final Context context, final AccountManager accountManager , final Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
+    public static void performSync(final Context context, final AccountManager accountManager , final Account account, Bundle extras, String authority, ContentProviderClient provider, final SyncResult syncResult) {
         Log.d(TAG, "performSync: " + account.toString());
 
-        final long lastSyncMarker = getServerSyncMarker(accountManager, account);
+        long lastSyncMarker = getServerSyncMarker(accountManager, account);
+        long newSyncState = lastSyncMarker;
 
         final String token = Pref.getInstance(context).getString(Pref.USER_TOKEN,"");
         if (TextUtils.isEmpty(token)){
@@ -61,34 +64,82 @@ public class ContactsSyncAdapterService extends Service {
 
 
         Gson mGson = new Gson();
-        String organizationsString = Pref.getInstance(context).getString(Pref.SAVED_ORGANIZATIONS,"");
+        String savedOrganizationsString = Pref.getInstance(context).getString(Pref.SAVED_ORGANIZATIONS,"");
+        String deleteOrganizationsString = Pref.getInstance(context).getString(Pref.DELETE_ORGANIZATIONS,"");
+
         Type type = new TypeToken<List<EmployeeOrganizationModel>>(){}.getType();
-        List<EmployeeOrganizationModel> listSavedOrganization = mGson.fromJson(organizationsString, type);
+        List<EmployeeOrganizationModel> listSavedOrganization = mGson.fromJson(savedOrganizationsString, type);
+        List<EmployeeOrganizationModel> listDeleteOrganization = mGson.fromJson(deleteOrganizationsString, type);
+        List<EmployeeOrganizationModel> listNotDeleteOrganization = new ArrayList<>();
+
+        if (listDeleteOrganization == null){
+            listDeleteOrganization = new ArrayList<>();
+        }
+
         if (listSavedOrganization == null){
             listSavedOrganization = new ArrayList<>();
         }
 
-        for (final EmployeeOrganizationModel organizationModel : listSavedOrganization) {
-            RetrofitHelper.getPhoneService().getOrganizationIDPhonesLastUpdate(organizationModel.getID(), token).enqueue(new Callback<PhoneResponse<EmployeePhoneModel>>() {
-                @Override
-                public void onResponse(Call<PhoneResponse<EmployeePhoneModel>> call, Response<PhoneResponse<EmployeePhoneModel>> response) {
-                    Log.d("IS_Successful:", String.valueOf(response.isSuccessful()));
-                    if (response.isSuccessful()){
-                        if (response.body() != null) {
-                            Log.d("LIST_SIZE_PHONES_ORG:", String.valueOf(response.body().getBody().size()));
-                            long newSyncState = ContactsManager.syncContacts(context, account, response.body().getBody(), lastSyncMarker);
-                            setServerSyncMarker(accountManager, account, newSyncState);
-                            //RetrofitHelper.getPhoneService().updateUser(token);
-                        }
+        Log.d(TAG, "org list: " + listSavedOrganization.size());
+        Log.d(TAG, "org list del: " + listDeleteOrganization.size());
+
+        for (EmployeeOrganizationModel delOrganizationModel : listDeleteOrganization) {
+            Log.d(TAG, "org name del: " + delOrganizationModel.getName());
+            try {
+                Response<PhoneResponse<EmployeePhoneModel>> response = RetrofitHelper.getPhoneService().getOrganizationIDPhonesLastUpdate(delOrganizationModel.getID(), token).execute();
+                if (response.isSuccessful()){
+                    if (response.body() != null || response.body().getBody() != null) {
+                        Log.d(TAG, "size org del: " + response.body().getBody().size());
+                        ContactsManager.deleteContacts(context, account, response.body().getBody());
                     }
                 }
-
-                @Override
-                public void onFailure(Call<PhoneResponse<EmployeePhoneModel>> call, Throwable t) {
-                    Log.d("LIST_SIZE", t.getMessage());
-                }
-            });
+            } catch (IOException e) {
+                listNotDeleteOrganization.add(delOrganizationModel);
+                Log.e(TAG, "IOException", e);
+                syncResult.stats.numIoExceptions++;
+            }
         }
+
+        String deleteOrganizations = mGson.toJson(listNotDeleteOrganization);
+        Pref.getInstance(context).edit().putString(Pref.DELETE_ORGANIZATIONS, deleteOrganizations).apply();
+
+        for (final EmployeeOrganizationModel organizationModel : listSavedOrganization) {
+            Log.d(TAG, "org name: " + organizationModel.getName());
+            try {
+                Response<PhoneResponse<EmployeePhoneModel>> response = RetrofitHelper.getPhoneService().getOrganizationIDPhonesLastUpdate(organizationModel.getID(), token).execute();
+                if (response.isSuccessful()){
+                    if (response.body() != null || response.body().getBody() != null) {
+                        Log.d(TAG, "size org: " + response.body().getBody().size());
+                        newSyncState = ContactsManager.syncContacts(context, account, response.body().getBody(), lastSyncMarker);
+                    }
+                }
+            } catch (IOException e) {
+                Log.e(TAG, "IOException", e);
+                syncResult.stats.numIoExceptions++;
+            }
+
+//            RetrofitHelper.getPhoneService().getOrganizationIDPhonesLastUpdate(organizationModel.getID(), token).enqueue(new Callback<PhoneResponse<EmployeePhoneModel>>() {
+//                @Override
+//                public void onResponse(Call<PhoneResponse<EmployeePhoneModel>> call, Response<PhoneResponse<EmployeePhoneModel>> response) {
+//                    Log.d("IS_Successful:", String.valueOf(response.isSuccessful()));
+//                    if (response.isSuccessful()){
+//                        if (response.body() != null) {
+//                            Log.d("LIST_SIZE_PHONES_ORG:", String.valueOf(response.body().getBody().size()));
+//                            long newSyncState = ContactsManager.syncContacts(context, account, response.body().getBody(), lastSyncMarker);
+//                            setServerSyncMarker(accountManager, account, newSyncState);
+//                            //RetrofitHelper.getPhoneService().updateUser(token);
+//                        }
+//                    }
+//                }
+//
+//                @Override
+//                public void onFailure(Call<PhoneResponse<EmployeePhoneModel>> call, Throwable t) {
+//                    Log.d("LIST_SIZE", t.getMessage());
+//                    syncResult.stats.numIoExceptions ++;
+//                }
+//            });
+        }
+        setServerSyncMarker(accountManager, account, newSyncState);
     }
 
     private static long getServerSyncMarker(AccountManager mAccountManager, Account account) {

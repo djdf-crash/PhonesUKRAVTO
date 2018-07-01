@@ -47,4 +47,11 @@ public class EmployeeOrganizationModel {
     public void setIsChecked(Boolean isChecked) {
         this.isChecked = isChecked;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj == this)return true;
+        EmployeeOrganizationModel model = (EmployeeOrganizationModel)obj;
+        return model.getID() == iD && model.getName() == name;
+    }
 }

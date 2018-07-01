@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="UkrAVTO Preferences" />
+    <CheckBoxPreference
+        android:key="sync_only_with_real_phone"
+        android:summary="Sync only with mobile phone"
+        android:defaultValue="true"
+        android:title="Sync phones" />
+</PreferenceScreen>
