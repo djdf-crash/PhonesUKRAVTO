@@ -49,6 +49,7 @@ public class ListOrganizationRecyclerAdapter extends RecyclerView.Adapter<ListOr
 
     public void setData(List<EmployeeOrganizationModel> data) {
         this.data = data;
+        notifyDataSetChanged();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder implements CompoundButton.OnCheckedChangeListener, View.OnClickListener {

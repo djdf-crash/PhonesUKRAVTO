@@ -84,6 +84,8 @@ public class SelectOrganizationActivity extends AppCompatActivity {
 
         mViewModel = ViewModelProviders.of(this).get(SelectOrganizationViewModel.class);
 
+        mAdapter = new ListOrganizationRecyclerAdapter();
+
         mLoadToast =  new LoadToast(this);
         mLoadToast.setText("I will get data on organizations...");
         mLoadToast.setTranslationY(350);
@@ -97,10 +99,8 @@ public class SelectOrganizationActivity extends AppCompatActivity {
                 if (employeeOrganizationModelPhoneResponse != null) {
                     if (employeeOrganizationModelPhoneResponse.getResult() && TextUtils.isEmpty(employeeOrganizationModelPhoneResponse.getError())) {
                         listOrganization = employeeOrganizationModelPhoneResponse.getBody();
-                        mAdapter = new ListOrganizationRecyclerAdapter();
                         mViewModel.checkListOrganization(listOrganization);
                         mAdapter.setData(listOrganization);
-                        mAdapter.notifyDataSetChanged();
                         mBinding.recyclerListOrganization.setAdapter(mAdapter);
                         mLoadToast.success();
                     } else {
@@ -136,7 +136,7 @@ public class SelectOrganizationActivity extends AppCompatActivity {
             public void onClick(View view) {
                 checkPermissionContacts();
                 if (PERMISSION_READ_STATE_GRANTED) {
-                    List<EmployeeOrganizationModel> listSave = mViewModel.saveOrganizationForSync(listOrganization);
+                    mViewModel.saveOrganizationForSync(listOrganization);
                     final Account acc = new Account(getString(R.string.custom_account), getString(R.string.ACCOUNT_TYPE));
                     addAccount(acc);
                     finish();
