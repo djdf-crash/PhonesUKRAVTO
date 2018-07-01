@@ -70,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
                     startActivity(new Intent(MainActivity.this, SelectOrganizationActivity.class));
                     finish();
                 }else {
+                    mBinding.bSendEmail.startAnimation(AnimationUtils.loadAnimation(getApplicationContext(), R.anim.shake_error));
                     Toast.makeText(getApplicationContext(), stringResponseString.getError(), Toast.LENGTH_LONG).show();
                     mLoadToast.error();
                 }

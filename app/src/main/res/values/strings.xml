@@ -1,9 +1,9 @@
 <resources>
-    <string name="app_name">Phones UKRAVTO</string>
+    <string name="app_name">Phones UkrAVTO</string>
     <string name="enter_your_corporate_email">Enter your corporate email:</string>
-    <string name="custom_account">UKRAVTO</string>
+    <string name="custom_account">UrkAVTO</string>
     <string name="ACCOUNT_TYPE">ua.in.ukravto.kb</string>
-    <string name="text_login">LogIn</string>
+    <string name="text_login">Sign In</string>
     <string name="select_none">Select none</string>
     <string name="select_all">Select ALL</string>
     <string name="summary_select_organization_for_sync">Setting selected organizations for sync</string>
