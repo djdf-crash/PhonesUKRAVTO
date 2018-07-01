@@ -22,15 +22,15 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".view.MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+        <activity android:name=".view.MainActivity" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
+        <activity android:name=".view.SelectOrganizationActivity">
+            <intent-filter>
+                <action android:name="ua.in.ukravto.kb.ACTION_SETTINGS_ACCOUNT" />
+
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-
-        <activity android:name=".view.SelectOrganizationActivity"/>
 
         <service
             android:name=".service.AccountAuthenticatorService"

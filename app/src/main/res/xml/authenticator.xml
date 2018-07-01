@@ -4,4 +4,5 @@
     android:label="@string/custom_account"
     android:icon="@mipmap/ic_launcher"
     android:accountType="@string/ACCOUNT_TYPE"
-    android:smallIcon="@mipmap/ic_launcher" />
+    android:smallIcon="@mipmap/ic_launcher"
+    android:accountPreferences="@xml/preference_sync"/>

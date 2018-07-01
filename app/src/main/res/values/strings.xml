@@ -6,4 +6,6 @@
     <string name="text_login">LogIn</string>
     <string name="select_none">Select none</string>
     <string name="select_all">Select ALL</string>
+    <string name="summary_select_organization_for_sync">Setting selected organizations for sync</string>
+    <string name="title_pref_organization">Settings organization</string>
 </resources>
