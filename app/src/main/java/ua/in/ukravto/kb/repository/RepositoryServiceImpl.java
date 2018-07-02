@@ -3,6 +3,7 @@ package ua.in.ukravto.kb.repository;
 import android.arch.lifecycle.MutableLiveData;
 import android.content.Context;
 import android.net.ConnectivityManager;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.io.IOException;
@@ -113,6 +114,20 @@ public class RepositoryServiceImpl implements RepositoryService {
                 mutableLiveData.postValue(phoneResponse);
             }
         });
+    }
+
+    @Override
+    @Nullable
+    public ResponseString<String> getIsLastUpdateAPP(String token, String currentVersionName) {
+        try {
+            Response<ResponseString<String>> response = RetrofitHelper.getPhoneService().getIsLastUpdateAPP(token, currentVersionName).execute();
+            if (response.isSuccessful()){
+                return response.body();
+            }
+        } catch (IOException e) {
+            Log.e(RetrofitHelper.class.getName(),e.getMessage(),e);
+        }
+        return null;
     }
 
     private boolean isNetworkAvailable(Context context) {

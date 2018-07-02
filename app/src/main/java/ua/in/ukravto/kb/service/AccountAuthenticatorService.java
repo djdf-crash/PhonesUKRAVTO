@@ -54,6 +54,12 @@ public class AccountAuthenticatorService extends Service {
             return reply;
         }
 
+        @Override
+        public Bundle getAccountRemovalAllowed(AccountAuthenticatorResponse response, Account account) throws NetworkErrorException {
+            Pref.getInstance(mContext).edit().putString(Pref.USER_TOKEN,"").apply();
+            return super.getAccountRemovalAllowed(response, account);
+        }
+
         public Bundle confirmCredentials(AccountAuthenticatorResponse response, Account account, Bundle options) {
             return null;
         }

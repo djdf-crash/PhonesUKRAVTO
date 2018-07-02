@@ -4,7 +4,6 @@ import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.POST;
-import retrofit2.http.Path;
 import retrofit2.http.Query;
 import ua.in.ukravto.kb.repository.database.model.EmployeeOrganizationModel;
 import ua.in.ukravto.kb.repository.database.model.EmployeePhoneModel;
@@ -28,6 +27,9 @@ public interface PhoneService {
     @POST("user/token")
     Call<ResponseString<String>> logIn(@Query("email") String email, @Query("deviceid") String idDevice);
 
-    @GET("user/update")
-    void updateUser(@Header("token") String token);
+    @POST("user/update")
+    Call<Void> updateUser(@Header("token") String token);
+
+    @GET("app/lastupdate")
+    Call<ResponseString<String>> getIsLastUpdateAPP(@Header("token")String token, @Query("currentversionname")String currentVersionName);
 }
