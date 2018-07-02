@@ -10,4 +10,6 @@
     <string name="title_pref_organization">Settings organization</string>
     <string name="action_search">search_organization</string>
     <string name="search_hint">Search organization</string>
+    <string name="fail_connect_to_server">Fail connect to server! Please try again later.</string>
+    <string name="check_internet_connection">Check internet connection!</string>
 </resources>

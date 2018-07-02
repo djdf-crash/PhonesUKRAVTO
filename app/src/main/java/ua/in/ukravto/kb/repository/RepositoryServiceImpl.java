@@ -3,6 +3,7 @@ package ua.in.ukravto.kb.repository;
 import android.arch.lifecycle.MutableLiveData;
 import android.content.Context;
 import android.net.ConnectivityManager;
+import android.util.Log;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import ua.in.ukravto.kb.R;
 import ua.in.ukravto.kb.repository.database.model.EmployeeOrganizationModel;
 import ua.in.ukravto.kb.repository.database.model.EmployeePhoneModel;
 import ua.in.ukravto.kb.repository.database.model.PhoneResponse;
@@ -29,7 +31,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     public void logIn(String email, String idDevice, final MutableLiveData<ResponseString<String>> responseStringMutableLiveData) {
         if (!isNetworkAvailable(mCtx)) {
             ResponseString<String> stringResponseString = new ResponseString<>();
-            stringResponseString.setError("Check internet connection!");
+            stringResponseString.setError(mCtx.getString(R.string.check_internet_connection));
             stringResponseString.setResult(false);
             responseStringMutableLiveData.setValue(stringResponseString);
             return;
@@ -42,8 +44,9 @@ public class RepositoryServiceImpl implements RepositoryService {
 
             @Override
             public void onFailure(Call<ResponseString<String>> call, Throwable t) {
+                Log.e("onFailure",t.getMessage(),t);
                 ResponseString<String> stringResponseString = new ResponseString<>();
-                stringResponseString.setError("Fail to load server!");
+                stringResponseString.setError(mCtx.getString(R.string.fail_connect_to_server));
                 stringResponseString.setResult(false);
                 responseStringMutableLiveData.postValue(stringResponseString);
             }
@@ -54,7 +57,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     public void getListOrganization(String token, final MutableLiveData<PhoneResponse<EmployeeOrganizationModel>> mutableLiveDataResponseOrganization) {
         if (!isNetworkAvailable(mCtx)) {
             PhoneResponse<EmployeeOrganizationModel> phoneResponse = new PhoneResponse<>();
-            phoneResponse.setError("Check internet connection!");
+            phoneResponse.setError(mCtx.getString(R.string.check_internet_connection));
             phoneResponse.setResult(false);
             mutableLiveDataResponseOrganization.setValue(phoneResponse);
             return;
@@ -76,8 +79,9 @@ public class RepositoryServiceImpl implements RepositoryService {
 
             @Override
             public void onFailure(Call<PhoneResponse<EmployeeOrganizationModel>> call, Throwable t) {
+                Log.e("onFailure",t.getMessage(),t);
                 PhoneResponse<EmployeeOrganizationModel> phoneResponse = new PhoneResponse<>();
-                phoneResponse.setError("Fail to load server!");
+                phoneResponse.setError(mCtx.getString(R.string.fail_connect_to_server));
                 phoneResponse.setResult(false);
                 mutableLiveDataResponseOrganization.postValue(phoneResponse);
             }
@@ -89,7 +93,7 @@ public class RepositoryServiceImpl implements RepositoryService {
 
         if (!isNetworkAvailable(mCtx)) {
             PhoneResponse<EmployeePhoneModel> phoneResponse = new PhoneResponse<>();
-            phoneResponse.setError("Check internet connection!");
+            phoneResponse.setError(mCtx.getString(R.string.check_internet_connection));
             phoneResponse.setResult(false);
             mutableLiveData.setValue(phoneResponse);
             return;
@@ -102,8 +106,9 @@ public class RepositoryServiceImpl implements RepositoryService {
 
             @Override
             public void onFailure(Call<PhoneResponse<EmployeePhoneModel>> call, Throwable t) {
+                Log.e("onFailure",t.getMessage(),t);
                 PhoneResponse<EmployeePhoneModel> phoneResponse = new PhoneResponse<>();
-                phoneResponse.setError("Fail to load server!");
+                phoneResponse.setError(mCtx.getString(R.string.fail_connect_to_server));
                 phoneResponse.setResult(false);
                 mutableLiveData.postValue(phoneResponse);
             }
