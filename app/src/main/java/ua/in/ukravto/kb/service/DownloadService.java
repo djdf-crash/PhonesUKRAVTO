@@ -26,6 +26,9 @@ public class DownloadService extends Service {
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
+
+        Log.d(TAG, "START DownloadService!");
+
         String token = Pref.getInstance(getApplicationContext()).getString(Pref.USER_TOKEN,"");
         try {
             final Response<ResponseBody> resp = RetrofitHelper.getPhoneService().getDownloadLastUpdateAPP(token).execute();
@@ -50,7 +53,7 @@ public class DownloadService extends Service {
     private boolean writeResponseBodyToDisk(Response<ResponseBody> response) {
         try {
             ResponseBody body = response.body();
-            // todo change the file location/name according to your needs
+
             File futureStudioIconFile = new File(getExternalFilesDir(null) + File.separator + "app.apk");
 
             InputStream inputStream = null;
