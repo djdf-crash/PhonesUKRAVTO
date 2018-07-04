@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">Phones UkrAVTO</string>
+    <string name="main_activity_name">Welcome to UkrAVTO</string>
+    <string name="select_activity_name">Organizations UkrAVTO</string>
+    <string name="settings_activity_name">Settings sync phones</string>
     <string name="enter_your_corporate_email">Enter your corporate email:</string>
     <string name="custom_account">UrkAVTO</string>
     <string name="ACCOUNT_TYPE">ua.in.ukravto.kb</string>
@@ -12,4 +15,7 @@
     <string name="search_hint">Search organization</string>
     <string name="fail_connect_to_server">Fail connect to server! Please try again later.</string>
     <string name="check_internet_connection">Check internet connection!</string>
+    <string name="check_update_now">Check update now</string>
+    <string name="text_app_is_latest">Your version of the app is the latest! Please, try again later.</string>
+    <string name="dowload_new_version_app">A new version of the app is available. Download it?</string>
 </resources>

@@ -118,7 +118,7 @@ public class RepositoryServiceImpl implements RepositoryService {
 
     @Override
     @Nullable
-    public ResponseString<String> getIsLastUpdateAPP(String token, String currentVersionName) {
+    public ResponseString<String> getIsLastUpdateAPPExecute(String token, String currentVersionName) {
         try {
             Response<ResponseString<String>> response = RetrofitHelper.getPhoneService().getIsLastUpdateAPP(token, currentVersionName).execute();
             if (response.isSuccessful()){
@@ -128,6 +128,35 @@ public class RepositoryServiceImpl implements RepositoryService {
             Log.e(RetrofitHelper.class.getName(),e.getMessage(),e);
         }
         return null;
+    }
+
+    @Override
+    public void getIsLastUpdateAPPEnqueue(String token, String currentVersionName, final MutableLiveData<ResponseString<String>> respLastUpdate) {
+        if (!isNetworkAvailable(mCtx)) {
+            ResponseString<String> stringResponseString = new ResponseString<>();
+            stringResponseString.setError(mCtx.getString(R.string.check_internet_connection));
+            stringResponseString.setResult(false);
+            respLastUpdate.setValue(stringResponseString);
+            return;
+        }
+
+        RetrofitHelper.getPhoneService().getIsLastUpdateAPP(token, currentVersionName).enqueue(new Callback<ResponseString<String>>() {
+            @Override
+            public void onResponse(Call<ResponseString<String>> call, Response<ResponseString<String>> response) {
+                respLastUpdate.postValue(response.body());
+            }
+
+            @Override
+            public void onFailure(Call<ResponseString<String>> call, Throwable t) {
+                Log.e("onFailure",t.getMessage(),t);
+                ResponseString<String> stringResponseString = new ResponseString<>();
+                stringResponseString.setError(mCtx.getString(R.string.fail_connect_to_server));
+                stringResponseString.setResult(false);
+                respLastUpdate.postValue(stringResponseString);
+            }
+        });
+
+
     }
 
     private boolean isNetworkAvailable(Context context) {

@@ -65,30 +65,68 @@ public class ContactsSyncAdapterService extends Service {
 
 
         Gson mGson = new Gson();
+
+        Type type = new TypeToken<List<EmployeeOrganizationModel>>() {}.getType();
+
+        syncDeleteContacts(context, account, syncResult, token, mGson, type);
+
+        newSyncState = syncUpdateContacts(context, account, syncResult, lastSyncMarker, newSyncState, token, mGson, type);
+        setServerSyncMarker(accountManager, account, newSyncState);
+    }
+
+    private static long syncUpdateContacts(Context context, Account account, SyncResult syncResult, long lastSyncMarker, long newSyncState, String token, Gson mGson, Type type) {
+
+        boolean syncOnlyLastUpdate = Pref.getInstance(context).getBoolean(Pref.SYNC_ONLY_NEW_UPDATE_PHONES, true);
+
         String savedOrganizationsString = Pref.getInstance(context).getString(Pref.SAVED_ORGANIZATIONS, "");
-        String deleteOrganizationsString = Pref.getInstance(context).getString(Pref.DELETE_ORGANIZATIONS, "");
-
-        Type type = new TypeToken<List<EmployeeOrganizationModel>>() {
-        }.getType();
         List<EmployeeOrganizationModel> listSavedOrganization = mGson.fromJson(savedOrganizationsString, type);
-        List<EmployeeOrganizationModel> listDeleteOrganization = mGson.fromJson(deleteOrganizationsString, type);
-        List<EmployeeOrganizationModel> listNotDeleteOrganization = new ArrayList<>();
-
-        if (listDeleteOrganization == null) {
-            listDeleteOrganization = new ArrayList<>();
-        }
 
         if (listSavedOrganization == null) {
             listSavedOrganization = new ArrayList<>();
         }
 
         Log.d(TAG, "org list: " + listSavedOrganization.size());
-        Log.d(TAG, "org list del: " + listDeleteOrganization.size());
 
+        try {
+            for (final EmployeeOrganizationModel organizationModel : listSavedOrganization) {
+                Log.d(TAG, "org name: " + organizationModel.getName());
+                Response<PhoneResponse<EmployeePhoneModel>> response;
+                if (syncOnlyLastUpdate) {
+                    response = RetrofitHelper.getPhoneService().getOrganizationIDPhonesLastUpdate(organizationModel.getID(), token).execute();
+                }else {
+                    response = RetrofitHelper.getPhoneService().getPhonesOrganizationID(organizationModel.getID(), token).execute();
+                }
+                if (response.isSuccessful()) {
+                    if (response.body() != null || response.body().getBody() != null) {
+                        Log.d(TAG, "size org: " + response.body().getBody().size());
+                        newSyncState = ContactsManager.syncContacts(context, account, response.body().getBody(), lastSyncMarker);
+                    }
+                }
+            }
+            RetrofitHelper.getPhoneService().updateUser(token).execute();
+        } catch (IOException e) {
+            Log.e(TAG, "IOException", e);
+            syncResult.stats.numIoExceptions++;
+        }
+        return newSyncState;
+    }
+
+    private static void syncDeleteContacts(Context context, Account account, SyncResult syncResult, String token, Gson mGson, Type type) {
+
+        String deleteOrganizationsString = Pref.getInstance(context).getString(Pref.DELETE_ORGANIZATIONS, "");
+        List<EmployeeOrganizationModel> listDeleteOrganization = mGson.fromJson(deleteOrganizationsString, type);
+
+        if (listDeleteOrganization == null) {
+            listDeleteOrganization = new ArrayList<>();
+        }
+
+        Log.d(TAG, "Organization list for delete: " + listDeleteOrganization.size());
+
+        List<EmployeeOrganizationModel> listNotDeleteOrganization = new ArrayList<>();
         for (EmployeeOrganizationModel delOrganizationModel : listDeleteOrganization) {
             Log.d(TAG, "org name del: " + delOrganizationModel.getName());
             try {
-                Response<PhoneResponse<EmployeePhoneModel>> response = RetrofitHelper.getPhoneService().getOrganizationIDPhonesLastUpdate(delOrganizationModel.getID(), token).execute();
+                Response<PhoneResponse<EmployeePhoneModel>> response = RetrofitHelper.getPhoneService().getPhonesOrganizationID(delOrganizationModel.getID(), token).execute();
                 if (response.isSuccessful()) {
                     if (response.body() != null || response.body().getBody() != null) {
                         Log.d(TAG, "size org del: " + response.body().getBody().size());
@@ -104,25 +142,6 @@ public class ContactsSyncAdapterService extends Service {
 
         String deleteOrganizations = mGson.toJson(listNotDeleteOrganization);
         Pref.getInstance(context).edit().putString(Pref.DELETE_ORGANIZATIONS, deleteOrganizations).apply();
-
-        try {
-            for (final EmployeeOrganizationModel organizationModel : listSavedOrganization) {
-                Log.d(TAG, "org name: " + organizationModel.getName());
-
-                Response<PhoneResponse<EmployeePhoneModel>> response = RetrofitHelper.getPhoneService().getOrganizationIDPhonesLastUpdate(organizationModel.getID(), token).execute();
-                if (response.isSuccessful()) {
-                    if (response.body() != null || response.body().getBody() != null) {
-                        Log.d(TAG, "size org: " + response.body().getBody().size());
-                        newSyncState = ContactsManager.syncContacts(context, account, response.body().getBody(), lastSyncMarker);
-                    }
-                }
-            }
-            RetrofitHelper.getPhoneService().updateUser(token).execute();
-        } catch (IOException e) {
-            Log.e(TAG, "IOException", e);
-            syncResult.stats.numIoExceptions++;
-        }
-        setServerSyncMarker(accountManager, account, newSyncState);
     }
 
     private static long getServerSyncMarker(AccountManager mAccountManager, Account account) {
@@ -145,7 +164,7 @@ public class ContactsSyncAdapterService extends Service {
         }
 
         RepositoryService rep = new RepositoryServiceImpl(ctx);
-        ResponseString<String> response = rep.getIsLastUpdateAPP(token, BuildConfig.VERSION_NAME);
+        ResponseString<String> response = rep.getIsLastUpdateAPPExecute(token, BuildConfig.VERSION_NAME);
         if (response != null && response.getResult()){
             NotificationBuilderHelper.buildMessage(ctx, response.getBody());
         }
@@ -164,7 +183,9 @@ public class ContactsSyncAdapterService extends Service {
         @Override
         public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
             performSync(this.mContext, mAccountManager, account, extras, authority, provider, syncResult);
-            checkLastUpdateAPP(mContext);
+            if (Pref.getInstance(mContext).getBoolean(Pref.AUTO_CHECK_UPDATE_APK, true)) {
+                checkLastUpdateAPP(mContext);
+            }
             Log.d(ContactsSyncAdapterService.TAG, syncResult.toDebugString());
         }
     }

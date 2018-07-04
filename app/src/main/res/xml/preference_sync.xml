@@ -8,7 +8,7 @@
             <intent
                 android:action="ua.in.ukravto.kb.ACTION_SETTINGS_ACCOUNT"
                 android:targetPackage="ua.in.ukravto.kb"
-                android:targetClass="ua.in.ukravto.kb.view.SelectOrganizationActivity"/>
+                android:targetClass="ua.in.ukravto.kb.view.SettingsActivity"/>
         </Preference>
     </PreferenceCategory>
 </PreferenceScreen>

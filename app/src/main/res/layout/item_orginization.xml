@@ -18,7 +18,6 @@
             android:id="@+id/cart_view_organization_item"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="8dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
@@ -27,7 +26,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center_vertical|center_horizontal"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:background="@color/colorPrimary">
 
                 <CheckBox
                     android:id="@+id/checkOrganization"
@@ -42,6 +42,7 @@
                     android:layout_height="wrap_content"
                     android:layout_margin="8dp"
                     android:layout_weight="1"
+                    android:textColor="@color/textAccent"
                     android:text="@{organization.name}"
                     android:textAlignment="viewStart"
                     tools:text="АВТОМОБІЛЬНА ФІЛІЯ  тра " />

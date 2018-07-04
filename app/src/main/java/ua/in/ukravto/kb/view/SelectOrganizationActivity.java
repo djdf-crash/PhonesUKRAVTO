@@ -78,6 +78,11 @@ public class SelectOrganizationActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_select_organization);
+
+       setSupportActionBar(mBinding.toolbar);
+       getSupportActionBar().setHomeButtonEnabled(true);
+       getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         mBinding.recyclerListOrganization.setHasFixedSize(true);
         mLayoutManager = new LinearLayoutManager(this);
         listOrganization = new ArrayList<>();
@@ -137,18 +142,6 @@ public class SelectOrganizationActivity extends AppCompatActivity {
             }
         });
 
-        mBinding.fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                checkPermissionContacts();
-                if (PERMISSION_READ_STATE_GRANTED) {
-                    mViewModel.saveOrganizationForSync(listOrganization);
-                    Account acc = new Account(getResources().getString(R.string.custom_account), getResources().getString(R.string.ACCOUNT_TYPE));
-                    addAccount(acc);
-                    finish();
-                }
-            }
-        });
     }
 
     private void syncNow(final Account account){
@@ -326,6 +319,14 @@ public class SelectOrganizationActivity extends AppCompatActivity {
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_search) {
             return true;
+        }else if (id == android.R.id.home){
+            checkPermissionContacts();
+            if (PERMISSION_READ_STATE_GRANTED) {
+                mViewModel.saveOrganizationForSync(listOrganization);
+                Account acc = new Account(getResources().getString(R.string.custom_account), getResources().getString(R.string.ACCOUNT_TYPE));
+                addAccount(acc);
+                finish();
+            }
         }
 
         return super.onOptionsItemSelected(item);

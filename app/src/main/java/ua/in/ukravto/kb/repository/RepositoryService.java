@@ -13,5 +13,6 @@ public interface RepositoryService {
     void logIn(String email, String idDevice, MutableLiveData<ResponseString<String>> responseStringMutableLiveData);
     void getListOrganization(String token, MutableLiveData<PhoneResponse<EmployeeOrganizationModel>> mutableLiveDataResponseOrganization);
     void getAllPhonesLastUpdate(String token, MutableLiveData<PhoneResponse<EmployeePhoneModel>> mutableLiveData);
-    ResponseString<String> getIsLastUpdateAPP(String token, String currentVersionName);
+    ResponseString<String> getIsLastUpdateAPPExecute(String token, String currentVersionName);
+    void getIsLastUpdateAPPEnqueue(String token, String currentVersionName, MutableLiveData<ResponseString<String>> respLastUpdate);
 }

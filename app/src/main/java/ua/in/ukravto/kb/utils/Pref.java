@@ -12,6 +12,8 @@ public class Pref {
     public static final String SAVED_ORGANIZATIONS = "saved_organizations";
     public static final String SYNC_ALL_ORGANIZATION = "sync_all_organization";
     public static final String DELETE_ORGANIZATIONS = "deleted_organization";
+    public static final String SYNC_ONLY_NEW_UPDATE_PHONES = "sync_only_new_updates_phones";
+    public static final String AUTO_CHECK_UPDATE_APK = "auto_check_update_apk";
     private static SharedPreferences sp;
 
     public static SharedPreferences getInstance(Context ctx){

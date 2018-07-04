@@ -4,6 +4,8 @@ import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.POST;
+import retrofit2.http.Part;
+import retrofit2.http.Path;
 import retrofit2.http.Query;
 import ua.in.ukravto.kb.repository.database.model.EmployeeOrganizationModel;
 import ua.in.ukravto.kb.repository.database.model.EmployeePhoneModel;
@@ -21,6 +23,9 @@ public interface PhoneService {
     @GET("phone/lastupdate")
     Call<PhoneResponse<EmployeePhoneModel>> getOrganizationIDPhonesLastUpdate(@Query("idorganization") int id, @Header("token") String token);
 
+    @GET("phone/idorganization/{id}")
+    Call<PhoneResponse<EmployeePhoneModel>> getPhonesOrganizationID(@Path("id") int id, @Header("token") String token);
+
     @GET("organization/all")
     Call<PhoneResponse<EmployeeOrganizationModel>> getListOrganizations(@Header("token") String token);
 
@@ -30,6 +35,9 @@ public interface PhoneService {
     @POST("user/update")
     Call<Void> updateUser(@Header("token") String token);
 
-    @GET("app/lastupdate")
+    @GET("apk/lastupdate")
     Call<ResponseString<String>> getIsLastUpdateAPP(@Header("token")String token, @Query("currentversionname")String currentVersionName);
+
+    @GET("apk/download")
+    Call<ResponseString<String>> getDownloadLastUpdateAPP(@Header("token")String token);
 }

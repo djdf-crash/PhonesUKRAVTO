@@ -52,6 +52,8 @@ public class MainActivity extends AppCompatActivity {
 
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
+        setSupportActionBar(mBinding.toolbar);
+
         mViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
 
         tm = (TelephonyManager)this.getSystemService(Context.TELEPHONY_SERVICE);
@@ -115,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
                 Pref.getInstance(getApplicationContext()).edit().putString(Pref.DEVICE_ID, deviceID).apply();
                 Pref.getInstance(getApplicationContext()).edit().putString(Pref.EMAIL, mBinding.editEmail.getText().toString()).apply();
             }else if (!TextUtils.isEmpty(token)){
-                startActivity(new Intent(this, SelectOrganizationActivity.class));
+                startActivity(new Intent(this, SettingsActivity.class));
                 finish();
             }
         }
