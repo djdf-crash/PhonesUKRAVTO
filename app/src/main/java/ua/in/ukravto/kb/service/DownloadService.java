@@ -1,11 +1,18 @@
 package ua.in.ukravto.kb.service;
 
 import android.annotation.SuppressLint;
-import android.app.Service;
+import android.app.IntentService;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.IBinder;
+import android.os.Build;
+import android.os.Environment;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 
 import java.io.File;
@@ -16,30 +23,61 @@ import java.io.OutputStream;
 
 import okhttp3.ResponseBody;
 import retrofit2.Response;
+import ua.in.ukravto.kb.BuildConfig;
+import ua.in.ukravto.kb.R;
 import ua.in.ukravto.kb.repository.service.RetrofitHelper;
+import ua.in.ukravto.kb.utils.NotificationBuilderHelper;
 import ua.in.ukravto.kb.utils.Pref;
 
 import static android.support.constraint.Constraints.TAG;
 
-public class DownloadService extends Service {
-    @SuppressLint("StaticFieldLeak")
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
+public class DownloadService extends IntentService {
 
+    private final int notificationId = 999;
+
+    public DownloadService() {
+        super("Download service UkrAVTO");
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    @Override
+    protected void onHandleIntent(@Nullable final Intent intent) {
         Log.d(TAG, "START DownloadService!");
 
         String token = Pref.getInstance(getApplicationContext()).getString(Pref.USER_TOKEN,"");
         try {
             final Response<ResponseBody> resp = RetrofitHelper.getPhoneService().getDownloadLastUpdateAPP(token).execute();
             if (resp.isSuccessful()){
-                new AsyncTask<Void, Void, Void>() {
+
+                final NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
+                final NotificationCompat.Builder mBuilder = NotificationBuilderHelper.buildMessage(getApplicationContext(),
+                        "Download 'Phones UkrAVTO'",
+                        "Download in progress",
+                        NotificationCompat.PRIORITY_LOW,
+                        NotificationCompat.CATEGORY_PROGRESS);
+
+
+                new AsyncTask<Void, Void, Boolean>() {
                     @Override
-                    protected Void doInBackground(Void... voids) {
-                        boolean writtenToDisk = writeResponseBodyToDisk(resp);
+                    protected Boolean doInBackground(Void... voids) {
+                        boolean writtenToDisk = writeResponseBodyToDisk(getApplicationContext(), resp, mBuilder, notificationManager);
 
                         Log.d(TAG, "file download was a success? " + writtenToDisk);
-                        return null;
+                        return writtenToDisk;
+                    }
+
+                    @Override
+                    protected void onPostExecute(Boolean writtenToDisk) {
+                        super.onPostExecute(writtenToDisk);
+                        if (writtenToDisk){
+                            notificationManager.cancel(notificationId);
+                            Intent intentForPending = createIntentForInstallAPP(getApplicationContext());
+                            getApplicationContext().startActivity(Intent.createChooser(intentForPending,""));
+                        }else {
+                            final PendingIntent pendingIntent = PendingIntent.getService(getApplicationContext(), 0, intent, 0);
+                            mBuilder.setContentText("Download fail").setProgress(0,0,false);
+                            mBuilder.setContentIntent(pendingIntent).addAction(R.drawable.ic_retry_black,"Retry", pendingIntent);
+                        }
                     }
                 }.execute();
             }
@@ -47,14 +85,31 @@ public class DownloadService extends Service {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return null;
     }
 
-    private boolean writeResponseBodyToDisk(Response<ResponseBody> response) {
+    private Intent createIntentForInstallAPP(Context ctx) {
+        String dest = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + File.separator + "update.apk";
+        Intent intent;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            Uri contentUri = FileProvider.getUriForFile(ctx, BuildConfig.APPLICATION_ID + ".provider", new File(dest));
+            intent = new Intent(Intent.ACTION_VIEW);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            intent.setData(contentUri);
+        }else {
+            final Uri uri = Uri.fromFile(new File(dest));
+            intent = new Intent(Intent.ACTION_VIEW);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            intent.setDataAndType(uri,"application/vnd.android.package-archive");
+        }
+        return intent;
+    }
+
+    private boolean writeResponseBodyToDisk(Context ctx, Response<ResponseBody> response, NotificationCompat.Builder mBuilder, NotificationManagerCompat notificationManager) {
         try {
             ResponseBody body = response.body();
 
-            File futureStudioIconFile = new File(getExternalFilesDir(null) + File.separator + "app.apk");
+            File futureStudioIconFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + File.separator + "update.apk");
 
             InputStream inputStream = null;
             OutputStream outputStream = null;
@@ -64,6 +119,10 @@ public class DownloadService extends Service {
 
                 long fileSize = body.contentLength();
                 long fileSizeDownloaded = 0;
+
+                mBuilder.setProgress((int) fileSize,(int)fileSizeDownloaded, false);
+                notificationManager.notify(notificationId, mBuilder.build());
+
 
                 inputStream = body.byteStream();
                 outputStream = new FileOutputStream(futureStudioIconFile);
@@ -78,6 +137,9 @@ public class DownloadService extends Service {
                     outputStream.write(fileReader, 0, read);
 
                     fileSizeDownloaded += read;
+
+                    mBuilder.setProgress((int) fileSize, (int) fileSizeDownloaded, false);
+                    notificationManager.notify(notificationId, mBuilder.build());
 
                     Log.d(TAG, "file download: " + fileSizeDownloaded + " of " + fileSize);
                 }

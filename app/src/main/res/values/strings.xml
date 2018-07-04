@@ -18,4 +18,6 @@
     <string name="check_update_now">Check update now</string>
     <string name="text_app_is_latest">Your version of the app is the latest! Please, try again later.</string>
     <string name="dowload_new_version_app">A new version of the app is available. Download it?</string>
+    <string name="channel_name">Update app</string>
+    <string name="channel_description">Update app Phones UkrAVTO</string>
 </resources>

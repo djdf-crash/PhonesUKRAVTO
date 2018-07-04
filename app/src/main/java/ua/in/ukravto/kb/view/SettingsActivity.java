@@ -44,7 +44,7 @@ public class SettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_settings);
-        mViewModel = mViewModel = ViewModelProviders.of(this).get(SettingsViewModel.class);
+        mViewModel = ViewModelProviders.of(this).get(SettingsViewModel.class);
 
         setSupportActionBar(mBinding.toolbar);
         getSupportActionBar().setHomeButtonEnabled(true);
@@ -98,7 +98,7 @@ public class SettingsActivity extends AppCompatActivity {
         mBinding.syncOnlyNewUpdates.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                Pref.getInstance(SettingsActivity.this).edit().putBoolean(Pref.SYNC_ONLY_NEW_UPDATE_PHONES, b).apply();
+
             }
         });
 
@@ -106,7 +106,7 @@ public class SettingsActivity extends AppCompatActivity {
         mBinding.autoCheckUpdateApk.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                Pref.getInstance(SettingsActivity.this).edit().putBoolean(Pref.AUTO_CHECK_UPDATE_APK, b).apply();
+
             }
         });
 
@@ -134,6 +134,13 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onStop() {
+        Pref.getInstance(getApplicationContext()).edit().putBoolean(Pref.SYNC_ONLY_NEW_UPDATE_PHONES, mBinding.syncOnlyNewUpdates.isChecked()).apply();
+        Pref.getInstance(getApplicationContext()).edit().putBoolean(Pref.AUTO_CHECK_UPDATE_APK, mBinding.autoCheckUpdateApk.isChecked()).apply();
+        super.onStop();
     }
 
     private void checkPermissionReadPhoneState() {

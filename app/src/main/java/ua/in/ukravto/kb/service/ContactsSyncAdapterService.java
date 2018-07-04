@@ -68,6 +68,8 @@ public class ContactsSyncAdapterService extends Service {
             return;
         }
 
+        boolean syncOnlyLastUpdate = Pref.getInstance(context).getBoolean(Pref.SYNC_ONLY_NEW_UPDATE_PHONES, true);
+        Log.d(TAG, "syncOnlyLastUpdate: " + syncOnlyLastUpdate);
 
         Gson mGson = new Gson();
 
@@ -82,6 +84,7 @@ public class ContactsSyncAdapterService extends Service {
     private static long syncUpdateContacts(Context context, Account account, SyncResult syncResult, long lastSyncMarker, long newSyncState, String token, Gson mGson, Type type) {
 
         boolean syncOnlyLastUpdate = Pref.getInstance(context).getBoolean(Pref.SYNC_ONLY_NEW_UPDATE_PHONES, true);
+        Log.d(TAG, "syncOnlyLastUpdate: " + syncOnlyLastUpdate);
 
         String savedOrganizationsString = Pref.getInstance(context).getString(Pref.SAVED_ORGANIZATIONS, "");
         List<EmployeeOrganizationModel> listSavedOrganization = mGson.fromJson(savedOrganizationsString, type);
@@ -108,7 +111,9 @@ public class ContactsSyncAdapterService extends Service {
                     }
                 }
             }
-            RetrofitHelper.getPhoneService().updateUser(token).execute();
+            if (syncOnlyLastUpdate) {
+                RetrofitHelper.getPhoneService().updateUser(token).execute();
+            }
         } catch (IOException e) {
             Log.e(TAG, "IOException", e);
             syncResult.stats.numIoExceptions++;
@@ -175,8 +180,12 @@ public class ContactsSyncAdapterService extends Service {
             Intent intent = new Intent(ctx, DownloadService.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             PendingIntent pendingIntent = PendingIntent.getService(ctx, 0, intent, 0);
-            NotificationCompat.Builder mBuilder = NotificationBuilderHelper.buildMessage(ctx, pendingIntent, "New version 'Phones UkrAVTO'", "Available new version UkrAVTO app. Tap to download now ;)");
-
+            NotificationCompat.Builder mBuilder = NotificationBuilderHelper.buildMessage(ctx,
+                    "New version 'Phones UkrAVTO'",
+                    "Available new version UkrAVTO app. Tap to download now ;)",
+                    NotificationCompat.PRIORITY_DEFAULT,
+                    NotificationCompat.CATEGORY_MESSAGE);
+            mBuilder.setContentIntent(pendingIntent);
             NotificationManagerCompat notificationManager = NotificationManagerCompat.from(ctx);
             notificationManager.notify(1, mBuilder.build());
         }
@@ -195,7 +204,10 @@ public class ContactsSyncAdapterService extends Service {
         @Override
         public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
             performSync(this.mContext, mAccountManager, account, extras, authority, provider, syncResult);
-            if (Pref.getInstance(mContext).getBoolean(Pref.AUTO_CHECK_UPDATE_APK, false)) {
+
+            boolean autoCheckUpdateAPK =  Pref.getInstance(mContext).getBoolean(Pref.AUTO_CHECK_UPDATE_APK, true);
+            Log.d(TAG, "autoCheckUpadteAPK: " + autoCheckUpdateAPK);
+            if (autoCheckUpdateAPK) {
                 checkLastUpdateAPP(mContext);
             }
             Log.d(ContactsSyncAdapterService.TAG, syncResult.toDebugString());
