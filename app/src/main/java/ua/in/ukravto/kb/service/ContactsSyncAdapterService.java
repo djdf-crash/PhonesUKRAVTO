@@ -2,6 +2,8 @@ package ua.in.ukravto.kb.service;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.app.DownloadManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
@@ -11,6 +13,8 @@ import android.content.Intent;
 import android.content.SyncResult;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -34,6 +38,7 @@ import ua.in.ukravto.kb.repository.service.RetrofitHelper;
 import ua.in.ukravto.kb.utils.ContactsManager;
 import ua.in.ukravto.kb.utils.NotificationBuilderHelper;
 import ua.in.ukravto.kb.utils.Pref;
+import ua.in.ukravto.kb.view.SettingsActivity;
 
 public class ContactsSyncAdapterService extends Service {
     private static final String TAG = "ContactsSyncAdapterS";
@@ -166,7 +171,14 @@ public class ContactsSyncAdapterService extends Service {
         RepositoryService rep = new RepositoryServiceImpl(ctx);
         ResponseString<String> response = rep.getIsLastUpdateAPPExecute(token, BuildConfig.VERSION_NAME);
         if (response != null && response.getResult()){
-            NotificationBuilderHelper.buildMessage(ctx, response.getBody());
+
+            Intent intent = new Intent(ctx, DownloadService.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            PendingIntent pendingIntent = PendingIntent.getService(ctx, 0, intent, 0);
+            NotificationCompat.Builder mBuilder = NotificationBuilderHelper.buildMessage(ctx, pendingIntent, "New version 'Phones UkrAVTO'", "Available new version UkrAVTO app. Tap to download now ;)");
+
+            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(ctx);
+            notificationManager.notify(1, mBuilder.build());
         }
     }
 
@@ -183,7 +195,7 @@ public class ContactsSyncAdapterService extends Service {
         @Override
         public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
             performSync(this.mContext, mAccountManager, account, extras, authority, provider, syncResult);
-            if (Pref.getInstance(mContext).getBoolean(Pref.AUTO_CHECK_UPDATE_APK, true)) {
+            if (Pref.getInstance(mContext).getBoolean(Pref.AUTO_CHECK_UPDATE_APK, false)) {
                 checkLastUpdateAPP(mContext);
             }
             Log.d(ContactsSyncAdapterService.TAG, syncResult.toDebugString());

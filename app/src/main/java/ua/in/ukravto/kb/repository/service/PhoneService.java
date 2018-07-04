@@ -1,12 +1,16 @@
 package ua.in.ukravto.kb.repository.service;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
+import retrofit2.Response;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
+import retrofit2.http.Headers;
 import retrofit2.http.POST;
 import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
+import retrofit2.http.Streaming;
 import ua.in.ukravto.kb.repository.database.model.EmployeeOrganizationModel;
 import ua.in.ukravto.kb.repository.database.model.EmployeePhoneModel;
 import ua.in.ukravto.kb.repository.database.model.PhoneResponse;
@@ -39,5 +43,7 @@ public interface PhoneService {
     Call<ResponseString<String>> getIsLastUpdateAPP(@Header("token")String token, @Query("currentversionname")String currentVersionName);
 
     @GET("apk/download")
-    Call<ResponseString<String>> getDownloadLastUpdateAPP(@Header("token")String token);
+    @Headers("Content-Type:application/octet-stream")
+    @Streaming
+    Call<ResponseBody> getDownloadLastUpdateAPP(@Header("token")String token);
 }
