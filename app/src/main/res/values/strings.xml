@@ -35,4 +35,5 @@
     <string name="select_sync_orginozations">Select sync orginozations</string>
     <string name="sync_only_new_update_phones">Sync only new update phones</string>
     <string name="automatically_check_for_updates">Automatically check for updates</string>
+    <string name="sync_with_phone_number_only">Sync contacts with phone number only</string>
 </resources>

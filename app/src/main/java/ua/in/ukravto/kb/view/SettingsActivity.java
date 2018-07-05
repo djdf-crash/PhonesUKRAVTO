@@ -148,6 +148,7 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         Pref.getInstance(getApplicationContext()).edit().putBoolean(Pref.SYNC_ONLY_NEW_UPDATE_PHONES, mBinding.syncOnlyNewUpdates.isChecked()).apply();
+        Pref.getInstance(getApplicationContext()).edit().putBoolean(Pref.SYNC_WITH_PHONES_ONLY, mBinding.syncOnlyWithPhone.isChecked()).apply();
         Pref.getInstance(getApplicationContext()).edit().putBoolean(Pref.AUTO_CHECK_UPDATE_APK, mBinding.autoCheckUpdateApk.isChecked()).apply();
         super.onStop();
     }

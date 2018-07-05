@@ -75,7 +75,9 @@ public class DownloadService extends IntentService {
                         if (writtenToDisk){
                             notificationManager.cancel(notificationId);
                             Intent intentForPending = createIntentForInstallAPP(getApplicationContext());
-                            getApplicationContext().startActivity(Intent.createChooser(intentForPending,""));
+                            Intent chooserIntent = Intent.createChooser(intentForPending,"");
+                            chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            getApplicationContext().startActivity(chooserIntent);
                         }else {
                             final PendingIntent pendingIntent = PendingIntent.getService(getApplicationContext(), 0, intent, 0);
                             mBuilder.setContentText(getString(R.string.text_download_fail)).setProgress(0,0,false);
@@ -93,7 +95,7 @@ public class DownloadService extends IntentService {
 
     private Intent createIntentForInstallAPP(Context ctx) {
         String dest = PATH_DOWNLOAD + NAME_UPDATE_FILE;
-        Intent intent = new Intent(Intent.ACTION_VIEW);;
+        Intent intent = new Intent(Intent.ACTION_VIEW);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             Uri contentUri = FileProvider.getUriForFile(ctx, BuildConfig.APPLICATION_ID + ".provider", new File(dest));
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -102,8 +104,7 @@ public class DownloadService extends IntentService {
         }else {
             final Uri uri = Uri.fromFile(new File(dest));
             intent = new Intent(Intent.ACTION_VIEW);
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             intent.setDataAndType(uri,"application/vnd.android.package-archive");
         }
         return intent;

@@ -14,6 +14,7 @@ import java.util.List;
 
 import ua.in.ukravto.kb.repository.database.model.EmployeePhoneModel;
 import ua.in.ukravto.kb.utils.DataTimeUtils;
+import ua.in.ukravto.kb.utils.Pref;
 
 import static android.support.constraint.Constraints.TAG;
 
@@ -143,10 +144,17 @@ public class ContactsManager {
         mAccount = account;
         long currentSyncMarker = lastSyncMarker;
 
+        boolean syncWithPhoneOnly = Pref.getInstance(context).getBoolean(Pref.SYNC_WITH_PHONES_ONLY, false);
+
         final ContentResolver resolver = context.getContentResolver();
         final BatchOperation batchOperation = new BatchOperation(context, resolver);
 
         for (EmployeePhoneModel rawContact : employees) {
+
+            if (syncWithPhoneOnly && TextUtils.isEmpty(rawContact.getRealPhone())){
+                continue;
+            }
+
             final long rawContactId;
 
             if (DataTimeUtils.getMillis(rawContact.getLastUpdate()) > currentSyncMarker) {
