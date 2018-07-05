@@ -72,7 +72,7 @@ public class SettingsActivity extends AppCompatActivity {
 
                     new AlertDialog.Builder(SettingsActivity.this)
                             .setMessage(R.string.dowload_new_version_app)
-                            .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                            .setPositiveButton(R.string.text_yes, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialogInterface, int i) {
                                     checkPermissionWriteExternalStorage();
@@ -81,7 +81,7 @@ public class SettingsActivity extends AppCompatActivity {
                                     }
                                 }
                             })
-                            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            .setNegativeButton(R.string.text_no, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialogInterface, int i) {
                                     dialogInterface.dismiss();
