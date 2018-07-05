@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Phones UkrAVTO</string>
+    <string name="main_activity_name">Ласкаво просимо в УкрАВТО</string>
+    <string name="select_activity_name">Організації УкрАВТО</string>
+    <string name="settings_activity_name">Налаштування синхронізації</string>
+    <string name="enter_your_corporate_email">Ваша корпоративна ел. скринька</string>
+    <string name="custom_account">УкрАВТО</string>
+    <string name="ACCOUNT_TYPE">ua.in.ukravto.kb</string>
+    <string name="text_login">Вхід</string>
+    <string name="select_none">Скасувати вибір</string>
+    <string name="select_all">Вибрати все</string>
+    <string name="summary_select_organization_for_sync">Налаштування вибраних організацій</string>
+    <string name="title_pref_organization">Налаштування організацій</string>
+    <string name="action_search">search_organization</string>
+    <string name="search_hint">Пошук організації</string>
+    <string name="fail_connect_to_server">Помилка з\'язку із сервером! Спробуйте пізніше.</string>
+    <string name="check_internet_connection">Перевірте підключення до інтернету!</string>
+    <string name="check_update_now">Перевірити наявність оновлення</string>
+    <string name="text_app_is_latest">Ваша версія додатку найновіша! Будь ласка, спробуйте пізніше.</string>
+    <string name="dowload_new_version_app">Доступна нова версія додатку. Завантащити зараз?</string>
+    <string name="channel_name">Update app</string>
+    <string name="channel_description">Оновлення додатку Phones UkrAVTO</string>
+    <string name="text_send_request">Виконується запит</string>
+    <string name="perm_is_req">Цей дозвіл необхідний для коректної роботи додатка!</string>
+    <string name="text_retry">Спробувати ще раз</string>
+    <string name="title_notif_download">Завантаження \'Phones UkrAVTO\'</string>
+    <string name="text_notif_download">Завантажується …</string>
+    <string name="error_email_is_empty">Не заповнена ел. скринька</string>
+    <string name="text_cancel">Відміна</string>
+    <string name="text_yes">Так</string>
+    <string name="text_no">Ні</string>
+    <string name="title_new_version_app">Нова версія додатка \'Phones UkrAVTO\'</string>
+    <string name="text_new_version_app">Доступна нова версія додатка \'Phones UkrAVTO\'. Для завантаження натисніть на повідомлення ;)</string>
+    <string name="text_download_fail">Помилка завантаження</string>
+    <string name="select_sync_orginozations">Вибір організацій для синхронізації</string>
+    <string name="sync_only_new_update_phones">Синхронізувати тільки оновлені дані</string>
+    <string name="automatically_check_for_updates">Автоматична перевірка оновлень додатка</string>
+</resources>

@@ -1,4 +1,4 @@
-package ua.in.ukravto.kb.utils;
+package ua.in.ukravto.kb.utils.contacts;
 
 import android.content.ContentProviderOperation;
 import android.content.ContentValues;
@@ -65,8 +65,8 @@ public class ContactOperations {
         return new ContactOperations(context, rawContactId, isSyncOperation, batchOperation);
     }
 
-    public ContactOperations(Context context, boolean isSyncOperation,
-                             BatchOperation batchOperation) {
+    private ContactOperations(Context context, boolean isSyncOperation,
+                              BatchOperation batchOperation) {
         mValues = new ContentValues();
         mIsYieldAllowed = true;
         mIsSyncOperation = isSyncOperation;
@@ -74,8 +74,8 @@ public class ContactOperations {
         mBatchOperation = batchOperation;
     }
 
-    public ContactOperations(Context context, long userId, String accountName,
-                             boolean isSyncOperation, BatchOperation batchOperation) {
+    private ContactOperations(Context context, long userId, String accountName,
+                              boolean isSyncOperation, BatchOperation batchOperation) {
         this(context, isSyncOperation, batchOperation);
         mBackReference = mBatchOperation.size();
         mIsNewContact = true;
@@ -87,8 +87,8 @@ public class ContactOperations {
         mBatchOperation.add(builder.build());
     }
 
-    public ContactOperations(Context context, long rawContactId, boolean isSyncOperation,
-                             BatchOperation batchOperation) {
+    private ContactOperations(Context context, long rawContactId, boolean isSyncOperation,
+                              BatchOperation batchOperation) {
         this(context, isSyncOperation, batchOperation);
         mIsNewContact = false;
         mRawContactId = rawContactId;

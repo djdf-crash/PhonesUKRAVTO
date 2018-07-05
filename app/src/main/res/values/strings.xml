@@ -20,4 +20,19 @@
     <string name="dowload_new_version_app">A new version of the app is available. Download it?</string>
     <string name="channel_name">Update app</string>
     <string name="channel_description">Update app Phones UkrAVTO</string>
+    <string name="text_send_request">Send request...</string>
+    <string name="perm_is_req">This permission is required for the correct operation of the application!</string>
+    <string name="text_retry">Retry</string>
+    <string name="title_notif_download">Download \'Phones UkrAVTO\'</string>
+    <string name="text_notif_download">Download in progress</string>
+    <string name="error_email_is_empty">Email is empty!</string>
+    <string name="text_cancel">Cancel</string>
+    <string name="text_yes">Yes</string>
+    <string name="text_no">No</string>
+    <string name="title_new_version_app">New version \'Phones UkrAVTO\'</string>
+    <string name="text_new_version_app">Available new version UkrAVTO app. Tap to download now ;)</string>
+    <string name="text_download_fail">Download fail</string>
+    <string name="select_sync_orginozations">Select sync orginozations</string>
+    <string name="sync_only_new_update_phones">Sync only new update phones</string>
+    <string name="automatically_check_for_updates">Automatically check for updates</string>
 </resources>

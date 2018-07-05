@@ -2,7 +2,6 @@ package ua.in.ukravto.kb.service;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
-import android.app.DownloadManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.AbstractThreadedSyncAdapter;
@@ -28,6 +27,7 @@ import java.util.List;
 
 import retrofit2.Response;
 import ua.in.ukravto.kb.BuildConfig;
+import ua.in.ukravto.kb.R;
 import ua.in.ukravto.kb.repository.RepositoryService;
 import ua.in.ukravto.kb.repository.RepositoryServiceImpl;
 import ua.in.ukravto.kb.repository.database.model.EmployeeOrganizationModel;
@@ -35,10 +35,9 @@ import ua.in.ukravto.kb.repository.database.model.EmployeePhoneModel;
 import ua.in.ukravto.kb.repository.database.model.PhoneResponse;
 import ua.in.ukravto.kb.repository.database.model.ResponseString;
 import ua.in.ukravto.kb.repository.service.RetrofitHelper;
-import ua.in.ukravto.kb.utils.ContactsManager;
+import ua.in.ukravto.kb.utils.contacts.ContactsManager;
 import ua.in.ukravto.kb.utils.NotificationBuilderHelper;
 import ua.in.ukravto.kb.utils.Pref;
-import ua.in.ukravto.kb.view.SettingsActivity;
 
 public class ContactsSyncAdapterService extends Service {
     private static final String TAG = "ContactsSyncAdapterS";
@@ -181,8 +180,8 @@ public class ContactsSyncAdapterService extends Service {
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             PendingIntent pendingIntent = PendingIntent.getService(ctx, 0, intent, 0);
             NotificationCompat.Builder mBuilder = NotificationBuilderHelper.buildMessage(ctx,
-                    "New version 'Phones UkrAVTO'",
-                    "Available new version UkrAVTO app. Tap to download now ;)",
+                    ctx.getString(R.string.title_new_version_app),
+                    ctx.getString(R.string.text_new_version_app),
                     NotificationCompat.PRIORITY_DEFAULT,
                     NotificationCompat.CATEGORY_MESSAGE);
             mBuilder.setContentIntent(pendingIntent);

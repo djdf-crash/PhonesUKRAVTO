@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
         tm = (TelephonyManager)this.getSystemService(Context.TELEPHONY_SERVICE);
 
         mLoadToast =  new LoadToast(this);
-        mLoadToast.setText("Send request...");
+        mLoadToast.setText(getString(R.string.text_send_request));
         mLoadToast.setTranslationY(350);
 
         mViewModel.getResponseLoginLiveData().observe(this, new Observer<ResponseString<String>>() {
@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
                     Pref.getInstance(getApplicationContext()).edit().putString(Pref.USER_TOKEN, stringResponseString.getBody()).apply();
                     Pref.getInstance(getApplicationContext()).edit().putString(Pref.EMAIL, mBinding.editEmail.getEditableText().toString()).apply();
                     mLoadToast.success();
-                    startActivity(new Intent(MainActivity.this, SelectOrganizationActivity.class));
+                    startActivity(new Intent(MainActivity.this, SettingsActivity.class));
                     finish();
                 }else {
                     mBinding.bSendEmail.startAnimation(AnimationUtils.loadAnimation(getApplicationContext(), R.anim.shake_error));
@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if (TextUtils.isEmpty(mBinding.editEmail.getText().toString())) {
-                    mBinding.editEmail.setError("Email is empty!");
+                    mBinding.editEmail.setError(getString(R.string.error_email_is_empty));
                     mBinding.bSendEmail.startAnimation(AnimationUtils.loadAnimation(getApplicationContext(), R.anim.shake_error));
                 } else {
                     if (PERMISSION_READ_STATE_GRANTED) {
@@ -155,8 +155,8 @@ public class MainActivity extends AppCompatActivity {
             } else {
 
                 new AlertDialog.Builder(MainActivity.this)
-                        .setMessage("This permission is required for the correct operation of the application!")
-                        .setPositiveButton("yes", new DialogInterface.OnClickListener() {
+                        .setMessage(getString(R.string.perm_is_req))
+                        .setPositiveButton(getString(R.string.text_yes), new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this, Manifest.permission.READ_PHONE_STATE)) {
@@ -166,7 +166,7 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             }
                         })
-                        .setNegativeButton("no", new DialogInterface.OnClickListener() {
+                        .setNegativeButton(getString(R.string.text_no), new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 dialogInterface.dismiss();

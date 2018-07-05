@@ -1,4 +1,4 @@
-package ua.in.ukravto.kb.utils;
+package ua.in.ukravto.kb.utils.contacts;
 
 import android.content.ContentProviderOperation;
 import android.content.ContentResolver;

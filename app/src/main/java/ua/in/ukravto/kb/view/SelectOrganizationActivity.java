@@ -1,14 +1,11 @@
 package ua.in.ukravto.kb.view;
 
 import android.Manifest;
-import android.accounts.Account;
-import android.accounts.AccountManager;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.SearchManager;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -26,37 +23,23 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
 import net.steamcrafted.loadtoast.LoadToast;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 import ua.in.ukravto.kb.R;
 import ua.in.ukravto.kb.adapters.ListOrganizationRecyclerAdapter;
 import ua.in.ukravto.kb.databinding.ActivitySelectOrganizationBinding;
 import ua.in.ukravto.kb.repository.database.model.EmployeeOrganizationModel;
-import ua.in.ukravto.kb.repository.database.model.EmployeePhoneModel;
 import ua.in.ukravto.kb.repository.database.model.PhoneResponse;
-import ua.in.ukravto.kb.repository.service.RetrofitHelper;
-import ua.in.ukravto.kb.utils.ContactsManager;
 import ua.in.ukravto.kb.utils.Pref;
 import ua.in.ukravto.kb.viewmodel.SelectOrganizationViewModel;
-
-import static ua.in.ukravto.kb.service.ContactsSyncAdapterService.SYNC_MARKER_KEY;
-import static ua.in.ukravto.kb.view.MainActivity.AUTHORITY;
 
 public class SelectOrganizationActivity extends AppCompatActivity {
 
@@ -67,7 +50,6 @@ public class SelectOrganizationActivity extends AppCompatActivity {
     private RecyclerView.LayoutManager mLayoutManager;
     private List<EmployeeOrganizationModel> listOrganization;
     private ListOrganizationRecyclerAdapter mAdapter;
-    private AccountManager mAccountManager;
     private String mToken;
     private SearchView searchView;
 
@@ -90,8 +72,6 @@ public class SelectOrganizationActivity extends AppCompatActivity {
 
         mBinding.recyclerListOrganization.addItemDecoration(new DividerItemDecoration(this,
                 DividerItemDecoration.VERTICAL));
-
-        mAccountManager = AccountManager.get(getApplicationContext());
 
         mViewModel = ViewModelProviders.of(this).get(SelectOrganizationViewModel.class);
 
@@ -142,59 +122,8 @@ public class SelectOrganizationActivity extends AppCompatActivity {
             }
         });
 
-    }
+        checkPermissionContacts();
 
-    private void syncNow(final Account account){
-        final AccountManager accountManager = AccountManager.get(getApplicationContext());
-        final long lastSyncMarker = getServerSyncMarker(accountManager, account);
-
-        mLoadToast.setText("Sync contacts...");
-        mLoadToast.show();
-
-        String token = Pref.getInstance(this).getString(Pref.USER_TOKEN,"");
-        if (TextUtils.isEmpty(token)){
-            return;
-        }
-        Gson mGson = new Gson();
-        String organizationsString = Pref.getInstance(this).getString(Pref.SAVED_ORGANIZATIONS,"");
-        Type type = new TypeToken<List<EmployeeOrganizationModel>>(){}.getType();
-        List<EmployeeOrganizationModel> listSavedOrganization = mGson.fromJson(organizationsString, type);
-        if (listSavedOrganization == null){
-            listSavedOrganization = new ArrayList<>();
-        }
-
-        for (final EmployeeOrganizationModel organizationModel : listSavedOrganization) {
-            RetrofitHelper.getPhoneService().getOrganizationIDPhonesLastUpdate(organizationModel.getID(), token).enqueue(new Callback<PhoneResponse<EmployeePhoneModel>>() {
-                @Override
-                public void onResponse(Call<PhoneResponse<EmployeePhoneModel>> call, final Response<PhoneResponse<EmployeePhoneModel>> response) {
-                    Log.d("IS_Successful:", String.valueOf(response.isSuccessful()));
-                    if (response.isSuccessful()){
-                        if (response.body() != null) {
-                            Log.d("LIST_SIZE_PHONES_ORG:", String.valueOf(response.body().getBody().size()));
-                            long newSyncState = ContactsManager.syncContacts(getApplicationContext(), account, response.body().getBody(),lastSyncMarker);
-                            setServerSyncMarker(accountManager, account, newSyncState);
-                        }
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<PhoneResponse<EmployeePhoneModel>> call, Throwable t) {
-
-                }
-            });
-        }
-    }
-
-    private static long getServerSyncMarker(AccountManager mAccountManager, Account account) {
-        String markerString = mAccountManager.getUserData(account, SYNC_MARKER_KEY);
-        if (!TextUtils.isEmpty(markerString)) {
-            return Long.parseLong(markerString);
-        }
-        return 0;
-    }
-
-    private static void setServerSyncMarker(AccountManager mAccountManager, Account account, long marker) {
-        mAccountManager.setUserData(account, SYNC_MARKER_KEY, Long.toString(marker));
     }
 
     private void checkPermissionContacts() {
@@ -209,15 +138,6 @@ public class SelectOrganizationActivity extends AppCompatActivity {
 
         }else {
             PERMISSION_READ_STATE_GRANTED = true;
-        }
-    }
-
-    private void addAccount(Account account) {
-        if (mAccountManager.addAccountExplicitly(account, null, null)) {
-            mAccountManager.setAuthToken(account, "full_access", mToken);
-            ContentResolver.addPeriodicSync(account, AUTHORITY, Bundle.EMPTY, 10800);
-            ContentResolver.setIsSyncable(account, AUTHORITY, 1);
-            ContentResolver.setSyncAutomatically(account, AUTHORITY, true);
         }
     }
 
@@ -253,8 +173,8 @@ public class SelectOrganizationActivity extends AppCompatActivity {
             if (permisionsDenide.size() > 0){
                 PERMISSION_READ_STATE_GRANTED = false;
                 new AlertDialog.Builder(SelectOrganizationActivity.this)
-                        .setMessage("This permission is required for the correct operation of the application!")
-                        .setPositiveButton("retry", new DialogInterface.OnClickListener() {
+                        .setMessage(getString(R.string.perm_is_req))
+                        .setPositiveButton(R.string.text_retry, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 if (ActivityCompat.shouldShowRequestPermissionRationale(SelectOrganizationActivity.this, Manifest.permission.WRITE_CONTACTS) ||
@@ -269,7 +189,7 @@ public class SelectOrganizationActivity extends AppCompatActivity {
                                 }
                             }
                         })
-                        .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                        .setNegativeButton(R.string.text_cancel, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 dialogInterface.dismiss();
@@ -323,8 +243,6 @@ public class SelectOrganizationActivity extends AppCompatActivity {
             checkPermissionContacts();
             if (PERMISSION_READ_STATE_GRANTED) {
                 mViewModel.saveOrganizationForSync(listOrganization);
-                Account acc = new Account(getResources().getString(R.string.custom_account), getResources().getString(R.string.ACCOUNT_TYPE));
-                addAccount(acc);
                 finish();
             }
         }

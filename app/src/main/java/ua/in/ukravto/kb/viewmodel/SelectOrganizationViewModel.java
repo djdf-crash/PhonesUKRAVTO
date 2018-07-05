@@ -16,7 +16,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import ua.in.ukravto.kb.adapters.ListOrganizationRecyclerAdapter;
 import ua.in.ukravto.kb.repository.RepositoryService;
 import ua.in.ukravto.kb.repository.RepositoryServiceImpl;
 import ua.in.ukravto.kb.repository.database.model.EmployeeOrganizationModel;
@@ -27,7 +26,6 @@ public class SelectOrganizationViewModel extends AndroidViewModel {
 
     private RepositoryService mRepository;
     private MutableLiveData<PhoneResponse<EmployeeOrganizationModel>> responseListOrganizationsLiveData = new MutableLiveData<>();
-    private MutableLiveData<ListOrganizationRecyclerAdapter> adapterMutableLiveData = new MutableLiveData<>();
     private List<EmployeeOrganizationModel> oldListSavedOrganization;
     private List<EmployeeOrganizationModel> oldListDelOrganization;
     private Context ctx;

@@ -1,9 +1,12 @@
 package ua.in.ukravto.kb.view;
 
 import android.Manifest;
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.app.AlertDialog;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.ContentResolver;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -18,7 +21,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.CompoundButton;
 import android.widget.Toast;
 
 import net.steamcrafted.loadtoast.LoadToast;
@@ -30,10 +32,14 @@ import ua.in.ukravto.kb.service.DownloadService;
 import ua.in.ukravto.kb.utils.Pref;
 import ua.in.ukravto.kb.viewmodel.SettingsViewModel;
 
+import static ua.in.ukravto.kb.view.MainActivity.AUTHORITY;
+
 public class SettingsActivity extends AppCompatActivity {
 
     private ActivitySettingsBinding mBinding;
     private SettingsViewModel mViewModel;
+    private AccountManager mAccountManager;
+    private String mToken;
     private LoadToast mLoadToast;
 
     private static boolean PERMISSION_READ_STORAGE_GRANTED = false;
@@ -69,7 +75,7 @@ public class SettingsActivity extends AppCompatActivity {
                             .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialogInterface, int i) {
-                                    checkPermissionReadPhoneState();
+                                    checkPermissionWriteExternalStorage();
                                     if (PERMISSION_READ_STORAGE_GRANTED) {
                                         startService(new Intent(getApplicationContext(), DownloadService.class));
                                     }
@@ -95,21 +101,24 @@ public class SettingsActivity extends AppCompatActivity {
         });
 
         mBinding.syncOnlyNewUpdates.setChecked(Pref.getInstance(this).getBoolean(Pref.SYNC_ONLY_NEW_UPDATE_PHONES, true));
-        mBinding.syncOnlyNewUpdates.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-
-            }
-        });
-
         mBinding.autoCheckUpdateApk.setChecked(Pref.getInstance(this).getBoolean(Pref.AUTO_CHECK_UPDATE_APK, true));
-        mBinding.autoCheckUpdateApk.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
 
-            }
-        });
+        mToken = Pref.getInstance(getApplicationContext()).getString(Pref.USER_TOKEN, "");
 
+        mAccountManager = AccountManager.get(getApplicationContext());
+
+        Account acc = new Account(getResources().getString(R.string.custom_account), getResources().getString(R.string.ACCOUNT_TYPE));
+        addAccount(acc);
+
+    }
+
+    private void addAccount(Account account) {
+        if (mAccountManager.addAccountExplicitly(account, null, null)) {
+            mAccountManager.setAuthToken(account, "full_access", mToken);
+            ContentResolver.addPeriodicSync(account, AUTHORITY, Bundle.EMPTY, 10800);
+            ContentResolver.setIsSyncable(account, AUTHORITY, 1);
+            ContentResolver.setSyncAutomatically(account, AUTHORITY, true);
+        }
     }
 
     @Override
@@ -125,7 +134,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_update) {
-            mLoadToast.setText("Send request...");
+            mLoadToast.setText(getString(R.string.text_send_request));
             mLoadToast.setTranslationY(350);
             mLoadToast.show();
             mViewModel.getLastUpdate();
@@ -143,7 +152,7 @@ public class SettingsActivity extends AppCompatActivity {
         super.onStop();
     }
 
-    private void checkPermissionReadPhoneState() {
+    private void checkPermissionWriteExternalStorage() {
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
 
@@ -168,7 +177,7 @@ public class SettingsActivity extends AppCompatActivity {
             } else {
 
                 new AlertDialog.Builder(SettingsActivity.this)
-                        .setMessage("This permission is required for the correct operation of the application!")
+                        .setMessage(R.string.perm_is_req)
                         .setPositiveButton("yes", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {

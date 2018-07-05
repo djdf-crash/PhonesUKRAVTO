@@ -34,6 +34,9 @@ import static android.support.constraint.Constraints.TAG;
 public class DownloadService extends IntentService {
 
     private final int notificationId = 999;
+    private final String NAME_UPDATE_FILE = "update.apk";
+    private final String PATH_DOWNLOAD = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + File.separator;
+
 
     public DownloadService() {
         super("Download service UkrAVTO");
@@ -51,8 +54,8 @@ public class DownloadService extends IntentService {
 
                 final NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
                 final NotificationCompat.Builder mBuilder = NotificationBuilderHelper.buildMessage(getApplicationContext(),
-                        "Download 'Phones UkrAVTO'",
-                        "Download in progress",
+                        getString(R.string.title_notif_download),
+                        getString(R.string.text_notif_download),
                         NotificationCompat.PRIORITY_LOW,
                         NotificationCompat.CATEGORY_PROGRESS);
 
@@ -75,8 +78,9 @@ public class DownloadService extends IntentService {
                             getApplicationContext().startActivity(Intent.createChooser(intentForPending,""));
                         }else {
                             final PendingIntent pendingIntent = PendingIntent.getService(getApplicationContext(), 0, intent, 0);
-                            mBuilder.setContentText("Download fail").setProgress(0,0,false);
-                            mBuilder.setContentIntent(pendingIntent).addAction(R.drawable.ic_retry_black,"Retry", pendingIntent);
+                            mBuilder.setContentText(getString(R.string.text_download_fail)).setProgress(0,0,false);
+                            mBuilder.setContentIntent(pendingIntent).addAction(R.drawable.ic_retry_black,getString(R.string.text_retry), pendingIntent);
+                            notificationManager.notify(notificationId, mBuilder.build());
                         }
                     }
                 }.execute();
@@ -88,17 +92,17 @@ public class DownloadService extends IntentService {
     }
 
     private Intent createIntentForInstallAPP(Context ctx) {
-        String dest = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + File.separator + "update.apk";
-        Intent intent;
+        String dest = PATH_DOWNLOAD + NAME_UPDATE_FILE;
+        Intent intent = new Intent(Intent.ACTION_VIEW);;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             Uri contentUri = FileProvider.getUriForFile(ctx, BuildConfig.APPLICATION_ID + ".provider", new File(dest));
-            intent = new Intent(Intent.ACTION_VIEW);
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             intent.setData(contentUri);
         }else {
             final Uri uri = Uri.fromFile(new File(dest));
             intent = new Intent(Intent.ACTION_VIEW);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             intent.setDataAndType(uri,"application/vnd.android.package-archive");
         }
@@ -109,7 +113,7 @@ public class DownloadService extends IntentService {
         try {
             ResponseBody body = response.body();
 
-            File futureStudioIconFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + File.separator + "update.apk");
+            File futureStudioIconFile = new File(PATH_DOWNLOAD + NAME_UPDATE_FILE);
 
             InputStream inputStream = null;
             OutputStream outputStream = null;

@@ -1,4 +1,4 @@
-package ua.in.ukravto.kb.utils;
+package ua.in.ukravto.kb.utils.contacts;
 
 import android.accounts.Account;
 import android.content.ContentResolver;
@@ -13,6 +13,7 @@ import android.util.Log;
 import java.util.List;
 
 import ua.in.ukravto.kb.repository.database.model.EmployeePhoneModel;
+import ua.in.ukravto.kb.utils.DataTimeUtils;
 
 import static android.support.constraint.Constraints.TAG;
 
@@ -31,7 +32,7 @@ public class ContactsManager {
                 .addOrganizationAndPost(rawContact.getOrganizationName(), rawContact.getPost());
     }
 
-    private static void deleteContact(Context context, long rawContactId, BatchOperation batchOperation) {
+    private static void deleteContact(long rawContactId, BatchOperation batchOperation) {
 
         batchOperation.add(ContactOperations.newDeleteCpo(
                 ContentUris.withAppendedId(ContactsContract.RawContacts.CONTENT_URI, rawContactId),
@@ -45,56 +46,56 @@ public class ContactsManager {
         boolean existingCellPhone = false;
         boolean existingFullName = false;
         boolean existingOrganizationName = false;
-        boolean existingPostName = false;
         boolean existingEmail = false;
 
-        final Cursor c =
-                resolver.query(DataQuery.CONTENT_URI, DataQuery.PROJECTION, DataQuery.SELECTION,
-                        new String[] {String.valueOf(rawContactId)}, null);
         final ContactOperations contactOp = ContactOperations.updateExistingContact(context, rawContactId, inSync, batchOperation);
-        try {
+        try (Cursor c = resolver.query(DataQuery.CONTENT_URI, DataQuery.PROJECTION, DataQuery.SELECTION,
+                new String[]{String.valueOf(rawContactId)}, null)) {
             // Iterate over the existing rows of data, and update each one
             // with the information we received from the server.
             while (c.moveToNext()) {
                 final long id = c.getLong(DataQuery.COLUMN_ID);
                 final String mimeType = c.getString(DataQuery.COLUMN_MIMETYPE);
                 final Uri uri = ContentUris.withAppendedId(ContactsContract.Data.CONTENT_URI, id);
-                if (mimeType.equals(ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)) {
-                    existingFullName = true;
-                    contactOp.updateName(uri,
-                            c.getString(DataQuery.COLUMN_GIVEN_NAME),
-                            c.getString(DataQuery.COLUMN_FAMILY_NAME),
-                            c.getString(DataQuery.COLUMN_FULL_NAME),
-                            "",
-                            "",
-                            rawContact.getFullName());
-                } else if (mimeType.equals(ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)) {
-                    final int type = c.getInt(DataQuery.COLUMN_PHONE_TYPE);
-                    if (type == ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE) {
-                        existingCellPhone = true;
-                        contactOp.updatePhone(c.getString(DataQuery.COLUMN_PHONE_NUMBER),
-                                rawContact.getRealPhone(), uri);
-                    }
-                } else if (mimeType.equals(ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE)) {
-                    existingEmail = true;
-                    contactOp.updateEmail(rawContact.getEmail(),
-                            c.getString(DataQuery.COLUMN_EMAIL_ADDRESS), uri);
-                }else if (mimeType.equals(ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE)){
-                    if (!TextUtils.isEmpty(c.getString(DataQuery.COLUMN_ORGANIZATION_NAME))) {
-                        existingOrganizationName = true;
-                        contactOp.updateOrganizationAndPost(uri, c.getString(DataQuery.COLUMN_ORGANIZATION_NAME),
-                                c.getString(DataQuery.COLUMN_ORGANIZATION_POST),
-                                rawContact.getOrganizationName(),
-                                rawContact.getPost());
-                    }
+                switch (mimeType) {
+                    case ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE:
+                        existingFullName = true;
+                        contactOp.updateName(uri,
+                                c.getString(DataQuery.COLUMN_GIVEN_NAME),
+                                c.getString(DataQuery.COLUMN_FAMILY_NAME),
+                                c.getString(DataQuery.COLUMN_FULL_NAME),
+                                "",
+                                "",
+                                rawContact.getFullName());
+                        break;
+                    case ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE:
+                        final int type = c.getInt(DataQuery.COLUMN_PHONE_TYPE);
+                        if (type == ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE) {
+                            existingCellPhone = true;
+                            contactOp.updatePhone(c.getString(DataQuery.COLUMN_PHONE_NUMBER),
+                                    rawContact.getRealPhone(), uri);
+                        }
+                        break;
+                    case ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE:
+                        existingEmail = true;
+                        contactOp.updateEmail(rawContact.getEmail(),
+                                c.getString(DataQuery.COLUMN_EMAIL_ADDRESS), uri);
+                        break;
+                    case ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE:
+                        if (!TextUtils.isEmpty(c.getString(DataQuery.COLUMN_ORGANIZATION_NAME))) {
+                            existingOrganizationName = true;
+                            contactOp.updateOrganizationAndPost(uri, c.getString(DataQuery.COLUMN_ORGANIZATION_NAME),
+                                    c.getString(DataQuery.COLUMN_ORGANIZATION_POST),
+                                    rawContact.getOrganizationName(),
+                                    rawContact.getPost());
+                        }
 //                    if (!TextUtils.isEmpty(c.getString(DataQuery.COLUMN_ORGANIZATION_POST))){
 //                        existingPostName = true;
 //                        contactOp.updatePostName(uri, c.getString(DataQuery.COLUMN_ORGANIZATION_POST), rawContact.getPost());
 //                    }
+                        break;
                 }
             } // while
-        } finally {
-            c.close();
         }
 
         if (!existingFullName){
@@ -115,9 +116,7 @@ public class ContactsManager {
             contactOp.addEmail(rawContact.getEmail());
         }
 
-//        if (!existingPostName){
-//            contactOp.addPost(rawContact.getPost());
-//        }
+
         // If we need to update the serverId of the contact record, take
         // care of that.  This will happen if the contact is created on the
         // client, and then synced to the server. When we get the updated
@@ -162,7 +161,7 @@ public class ContactsManager {
                     updateContact(context, resolver, rawContact, false,
                             true, rawContactId, batchOperation);
                 } else {
-                    deleteContact(context, rawContactId, batchOperation);
+                    deleteContact(rawContactId, batchOperation);
                 }
             } else {
                 Log.d(TAG, "In addContact: " + rawContact.getFullName() + " | org:" + rawContact.getOrganizationName());
@@ -227,7 +226,7 @@ public class ContactsManager {
             rawContactId = lookupRawContact(context, resolver, serverContactId);
 
             if (rawContactId != 0) {
-                deleteContact(context, rawContactId, batchOperation);
+                deleteContact(rawContactId, batchOperation);
             }
         }
 
