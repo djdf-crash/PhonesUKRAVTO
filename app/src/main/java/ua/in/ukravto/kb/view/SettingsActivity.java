@@ -100,9 +100,6 @@ public class SettingsActivity extends AppCompatActivity {
             }
         });
 
-        mBinding.syncOnlyNewUpdates.setChecked(Pref.getInstance(this).getBoolean(Pref.SYNC_ONLY_NEW_UPDATE_PHONES, true));
-        mBinding.autoCheckUpdateApk.setChecked(Pref.getInstance(this).getBoolean(Pref.AUTO_CHECK_UPDATE_APK, true));
-
         mToken = Pref.getInstance(getApplicationContext()).getString(Pref.USER_TOKEN, "");
 
         mAccountManager = AccountManager.get(getApplicationContext());
@@ -146,11 +143,19 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStop() {
+    protected void onStart() {
+        mBinding.syncOnlyNewUpdates.setChecked(Pref.getInstance(this).getBoolean(Pref.SYNC_ONLY_NEW_UPDATE_PHONES, true));
+        mBinding.syncOnlyWithPhone.setChecked(Pref.getInstance(this).getBoolean(Pref.SYNC_WITH_PHONES_ONLY, true));
+        mBinding.autoCheckUpdateApk.setChecked(Pref.getInstance(this).getBoolean(Pref.AUTO_CHECK_UPDATE_APK, true));
+        super.onStart();
+    }
+
+    @Override
+    protected void onPause() {
         Pref.getInstance(getApplicationContext()).edit().putBoolean(Pref.SYNC_ONLY_NEW_UPDATE_PHONES, mBinding.syncOnlyNewUpdates.isChecked()).apply();
         Pref.getInstance(getApplicationContext()).edit().putBoolean(Pref.SYNC_WITH_PHONES_ONLY, mBinding.syncOnlyWithPhone.isChecked()).apply();
         Pref.getInstance(getApplicationContext()).edit().putBoolean(Pref.AUTO_CHECK_UPDATE_APK, mBinding.autoCheckUpdateApk.isChecked()).apply();
-        super.onStop();
+        super.onPause();
     }
 
     private void checkPermissionWriteExternalStorage() {
