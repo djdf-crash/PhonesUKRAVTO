@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <PreferenceCategory android:title="UkrAVTO Preferences">
-        <Preference
+    <PreferenceCategory android:title="@string/title_pref_ukr_avto">
+    </PreferenceCategory>
+        <PreferenceScreen
             android:key="select_organization"
             android:summary="@string/summary_select_organization_for_sync"
             android:title="@string/title_pref_organization">
@@ -9,6 +10,5 @@
                 android:action="ua.in.ukravto.kb.ACTION_SETTINGS_ACCOUNT"
                 android:targetPackage="ua.in.ukravto.kb"
                 android:targetClass="ua.in.ukravto.kb.view.MainActivity"/>
-        </Preference>
-    </PreferenceCategory>
+        </PreferenceScreen>
 </PreferenceScreen>

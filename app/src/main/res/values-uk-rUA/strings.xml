@@ -11,7 +11,7 @@
     <string name="select_none">Скасувати вибір</string>
     <string name="select_all">Вибрати все</string>
     <string name="summary_select_organization_for_sync">Налаштування вибраних організацій</string>
-    <string name="title_pref_organization">Налаштування організацій</string>
+    <string name="title_pref_organization">Налаштування</string>
     <string name="action_search">search_organization</string>
     <string name="search_hint">Пошук організації</string>
     <string name="fail_connect_to_server">Помилка з\'язку із сервером! Спробуйте пізніше.</string>
@@ -39,4 +39,5 @@
     <string name="sync_with_phone_number_only">Синхронізувати контакти тільки з номером телефону</string>
     <string name="get_data_organizations">Отримую дані організацій…</string>
     <string name="sync_now">Синхронізувати зараз</string>
+    <string name="title_pref_ukr_avto">Налаштування УкрАВТО</string>
 </resources>
