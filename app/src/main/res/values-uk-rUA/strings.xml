@@ -37,4 +37,6 @@
     <string name="sync_only_new_update_phones">Синхронізувати тільки оновлені дані</string>
     <string name="automatically_check_for_updates">Автоматична перевірка оновлень додатка</string>
     <string name="sync_with_phone_number_only">Синхронізувати контакти тільки з номером телефону</string>
+    <string name="get_data_organizations">Отримую дані організацій…</string>
+    <string name="sync_now">Синхронізувати зараз</string>
 </resources>

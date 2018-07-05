@@ -41,14 +41,16 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-
-        <activity android:name=".view.SettingsActivity">
             <intent-filter>
                 <action android:name="ua.in.ukravto.kb.ACTION_SETTINGS_ACCOUNT" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+        </activity>
+
+        <activity android:name=".view.SettingsActivity"
+            android:parentActivityName=".view.MainActivity">
+
         </activity>
 
         <activity android:name=".view.SelectOrganizationActivity"

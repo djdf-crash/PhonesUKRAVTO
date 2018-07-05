@@ -137,10 +137,22 @@ public class SettingsActivity extends AppCompatActivity {
             mViewModel.getLastUpdate();
         }else if (id == android.R.id.home){
             finish();
+        }else if (id == R.id.action_sync_now){
+            syncNow();
         }
 
         return super.onOptionsItemSelected(item);
     }
+
+    private void syncNow() {
+        for (Account acc : AccountManager.get(getApplicationContext()).getAccountsByType(getString(R.string.ACCOUNT_TYPE))) {
+            Bundle settingsBundle = new Bundle();
+            settingsBundle.putBoolean("force", true);
+            settingsBundle.putBoolean("expedited", true);
+            ContentResolver.requestSync(acc, MainActivity.AUTHORITY, settingsBundle);
+        }
+    }
+
 
     @Override
     protected void onStart() {

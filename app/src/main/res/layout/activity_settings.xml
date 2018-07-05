@@ -39,7 +39,7 @@
             android:layout_marginEnd="8dp"
             android:layout_marginStart="8dp"
             android:layout_marginTop="16dp"
-            android:background="@drawable/login_button_bg_trans_settings"
+            android:background="@drawable/button_bg"
             android:text="@string/select_sync_orginozations"
             android:textColor="@android:color/white"
             app:layout_constraintEnd_toEndOf="parent"

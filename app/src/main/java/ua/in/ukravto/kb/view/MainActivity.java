@@ -96,8 +96,12 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+    }
 
+    @Override
+    protected void onResume() {
         checkPermissionReadPhoneState();
+        super.onResume();
     }
 
     private void checkPermissionReadPhoneState() {

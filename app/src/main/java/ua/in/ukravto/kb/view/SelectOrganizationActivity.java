@@ -78,7 +78,7 @@ public class SelectOrganizationActivity extends AppCompatActivity {
         mAdapter = new ListOrganizationRecyclerAdapter();
 
         mLoadToast =  new LoadToast(this);
-        mLoadToast.setText("I will get data on organizations...");
+        mLoadToast.setText(getString(R.string.get_data_organizations));
         mLoadToast.setTranslationY(350);
         mLoadToast.show();
 
@@ -119,6 +119,13 @@ public class SelectOrganizationActivity extends AppCompatActivity {
                 if (listOrganization.size() > 0) {
                     mAdapter.notifyDataSetChanged();
                 }
+            }
+        });
+
+        mBinding.fabOK.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+               saveAndClose();
             }
         });
 
@@ -240,13 +247,17 @@ public class SelectOrganizationActivity extends AppCompatActivity {
         if (id == R.id.action_search) {
             return true;
         }else if (id == android.R.id.home){
-            checkPermissionContacts();
-            if (PERMISSION_READ_STATE_GRANTED) {
-                mViewModel.saveOrganizationForSync(listOrganization);
-                finish();
-            }
+            saveAndClose();
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void saveAndClose() {
+        checkPermissionContacts();
+        if (PERMISSION_READ_STATE_GRANTED) {
+            mViewModel.saveOrganizationForSync(listOrganization);
+            finish();
+        }
     }
 }
