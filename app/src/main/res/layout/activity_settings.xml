@@ -25,8 +25,7 @@
                 android:layout_alignParentStart="true"
                 android:layout_alignParentTop="true"
                 android:background="@drawable/toolbar_bg"
-                android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-                android:theme="@style/ThemeOverlay.AppCompat.Light"
+                app:popupTheme="@style/PopupMenu"
                 app:title="@string/settings_activity_name"
                 app:titleTextColor="@android:color/white"
                 tools:title="@string/settings_activity_name"/>

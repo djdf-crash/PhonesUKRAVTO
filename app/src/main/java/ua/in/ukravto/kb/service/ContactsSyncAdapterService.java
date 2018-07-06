@@ -67,9 +67,6 @@ public class ContactsSyncAdapterService extends Service {
             return;
         }
 
-        boolean syncOnlyLastUpdate = Pref.getInstance(context).getBoolean(Pref.SYNC_ONLY_NEW_UPDATE_PHONES, true);
-        Log.d(TAG, "syncOnlyLastUpdate: " + syncOnlyLastUpdate);
-
         Gson mGson = new Gson();
 
         Type type = new TypeToken<List<EmployeeOrganizationModel>>() {}.getType();
