@@ -25,11 +25,14 @@ import android.widget.Toast;
 
 import net.steamcrafted.loadtoast.LoadToast;
 
+import java.util.List;
+
 import ua.in.ukravto.kb.R;
 import ua.in.ukravto.kb.databinding.ActivitySettingsBinding;
 import ua.in.ukravto.kb.repository.database.model.ResponseString;
 import ua.in.ukravto.kb.service.DownloadService;
 import ua.in.ukravto.kb.utils.Pref;
+import ua.in.ukravto.kb.utils.account.AccountHelper;
 import ua.in.ukravto.kb.viewmodel.SettingsViewModel;
 
 import static ua.in.ukravto.kb.view.MainActivity.AUTHORITY;
@@ -104,18 +107,12 @@ public class SettingsActivity extends AppCompatActivity {
 
         mAccountManager = AccountManager.get(getApplicationContext());
 
-        Account acc = new Account(getResources().getString(R.string.custom_account), getResources().getString(R.string.ACCOUNT_TYPE));
-        addAccount(acc);
-
-    }
-
-    private void addAccount(Account account) {
-        if (mAccountManager.addAccountExplicitly(account, null, null)) {
-            mAccountManager.setAuthToken(account, "full_access", mToken);
-            ContentResolver.addPeriodicSync(account, AUTHORITY, Bundle.EMPTY, 10800);
-            ContentResolver.setIsSyncable(account, AUTHORITY, 1);
-            ContentResolver.setSyncAutomatically(account, AUTHORITY, true);
+        List<Account> accountList = AccountHelper.findAccountsByType(mAccountManager, getString(R.string.ACCOUNT_TYPE));
+        if (accountList.size() == 0) {
+            Account acc = new Account(getResources().getString(R.string.custom_account), getResources().getString(R.string.ACCOUNT_TYPE));
+            AccountHelper.addAccount(mAccountManager, acc, mToken);
         }
+
     }
 
     @Override
@@ -145,7 +142,8 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void syncNow() {
-        for (Account acc : AccountManager.get(getApplicationContext()).getAccountsByType(getString(R.string.ACCOUNT_TYPE))) {
+        List<Account> accountList = AccountHelper.findAccountsByType(mAccountManager, getString(R.string.ACCOUNT_TYPE));
+        for (Account acc : accountList) {
             Bundle settingsBundle = new Bundle();
             settingsBundle.putBoolean("force", true);
             settingsBundle.putBoolean("expedited", true);
