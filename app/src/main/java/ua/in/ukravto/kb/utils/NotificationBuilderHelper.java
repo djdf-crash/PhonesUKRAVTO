@@ -24,6 +24,8 @@ public class NotificationBuilderHelper {
                 .setContentText(text)
                 .setPriority(priority)
                 .setCategory(category)
+                .setStyle(new NotificationCompat.BigTextStyle()
+                        .bigText(text))
                 .setOnlyAlertOnce(true)
                 .setAutoCancel(true);
     }

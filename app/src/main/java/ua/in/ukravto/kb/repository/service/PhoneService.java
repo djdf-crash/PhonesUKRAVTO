@@ -34,6 +34,9 @@ public interface PhoneService {
     @POST("user/token")
     Call<ResponseString<String>> logIn(@Query("email") String email, @Query("deviceid") String idDevice);
 
+    @POST("user/tokenisexist")
+    Call<ResponseString<String>> tokenIsExist(@Header("token") String token);
+
     @POST("user/update")
     Call<Void> updateUser(@Header("token") String token);
 

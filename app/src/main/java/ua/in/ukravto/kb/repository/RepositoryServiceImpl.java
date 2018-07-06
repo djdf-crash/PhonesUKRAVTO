@@ -159,6 +159,32 @@ public class RepositoryServiceImpl implements RepositoryService {
 
     }
 
+    @Override
+    public void tokenIsExist(String token, final MutableLiveData<ResponseString<String>> existTokenLiveData) {
+        if (!isNetworkAvailable(mCtx)) {
+            ResponseString<String> stringResponseString = new ResponseString<>();
+            stringResponseString.setError(mCtx.getString(R.string.check_internet_connection));
+            stringResponseString.setResult(false);
+            existTokenLiveData.setValue(stringResponseString);
+            return;
+        }
+        RetrofitHelper.getPhoneService().tokenIsExist(token).enqueue(new Callback<ResponseString<String>>() {
+            @Override
+            public void onResponse(Call<ResponseString<String>> call, Response<ResponseString<String>> response) {
+                existTokenLiveData.postValue(response.body());
+            }
+
+            @Override
+            public void onFailure(Call<ResponseString<String>> call, Throwable t) {
+                Log.e("onFailure",t.getMessage(),t);
+                ResponseString<String> stringResponseString = new ResponseString<>();
+                stringResponseString.setError(mCtx.getString(R.string.fail_connect_to_server));
+                stringResponseString.setResult(false);
+                existTokenLiveData.postValue(stringResponseString);
+            }
+        });
+    }
+
     private boolean isNetworkAvailable(Context context) {
         final ConnectivityManager connectivityManager = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE));
         return connectivityManager.getActiveNetworkInfo() != null && connectivityManager.getActiveNetworkInfo().isConnected();

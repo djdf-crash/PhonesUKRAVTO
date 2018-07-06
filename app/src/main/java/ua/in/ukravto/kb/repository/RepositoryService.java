@@ -15,4 +15,5 @@ public interface RepositoryService {
     void getAllPhonesLastUpdate(String token, MutableLiveData<PhoneResponse<EmployeePhoneModel>> mutableLiveData);
     ResponseString<String> getIsLastUpdateAPPExecute(String token, String currentVersionName);
     void getIsLastUpdateAPPEnqueue(String token, String currentVersionName, MutableLiveData<ResponseString<String>> respLastUpdate);
+    void tokenIsExist(String token, MutableLiveData<ResponseString<String>> existTokenLiveData);
 }

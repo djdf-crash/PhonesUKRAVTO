@@ -119,10 +119,18 @@ public class MainActivity extends AppCompatActivity {
             if (TextUtils.isEmpty(deviceID)) {
                 deviceID = tm.getDeviceId();
                 Pref.getInstance(getApplicationContext()).edit().putString(Pref.DEVICE_ID, deviceID).apply();
-                Pref.getInstance(getApplicationContext()).edit().putString(Pref.EMAIL, mBinding.editEmail.getText().toString()).apply();
             }else if (!TextUtils.isEmpty(token)){
-                startActivity(new Intent(this, SettingsActivity.class));
-                finish();
+                mLoadToast.show();
+                mViewModel.tokenIsExist(token).observe(this, new Observer<ResponseString<String>>() {
+                    @Override
+                    public void onChanged(@Nullable ResponseString<String> stringResponseString) {
+                        if (stringResponseString != null && stringResponseString.getResult()) {
+                            startActivity(new Intent(MainActivity.this, SettingsActivity.class));
+                            finish();
+                        }
+                        mLoadToast.success();
+                    }
+                });
             }
         }
     }

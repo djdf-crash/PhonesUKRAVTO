@@ -18,6 +18,7 @@ public class MainViewModel extends AndroidViewModel {
 
     private RepositoryService mRepository;
     private MutableLiveData<ResponseString<String>> responseLoginLiveData = new MutableLiveData<>();
+    private MutableLiveData<ResponseString<String>> existTokenLiveData = new MutableLiveData<>();
 
     public MainViewModel(@NonNull Application application) {
         super(application);
@@ -32,4 +33,8 @@ public class MainViewModel extends AndroidViewModel {
         return responseLoginLiveData;
     }
 
+    public MutableLiveData<ResponseString<String>> tokenIsExist(String token) {
+        mRepository.tokenIsExist(token, existTokenLiveData);
+        return existTokenLiveData;
+    }
 }

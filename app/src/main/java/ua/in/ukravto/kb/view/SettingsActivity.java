@@ -21,6 +21,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.CompoundButton;
 import android.widget.Toast;
 
 import net.steamcrafted.loadtoast.LoadToast;
@@ -105,6 +106,16 @@ public class SettingsActivity extends AppCompatActivity {
 
         mToken = Pref.getInstance(getApplicationContext()).getString(Pref.USER_TOKEN, "");
 
+        mBinding.autoCheckUpdateApk.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                checkPermissionWriteExternalStorage();
+                if (!PERMISSION_READ_STORAGE_GRANTED && mBinding.autoCheckUpdateApk.isChecked()){
+                    mBinding.autoCheckUpdateApk.setChecked(false);
+                }
+            }
+        });
+
         mAccountManager = AccountManager.get(getApplicationContext());
 
         List<Account> accountList = AccountHelper.findAccountsByType(mAccountManager, getString(R.string.ACCOUNT_TYPE));
@@ -154,9 +165,13 @@ public class SettingsActivity extends AppCompatActivity {
 
     @Override
     protected void onStart() {
+        checkPermissionWriteExternalStorage();
         mBinding.syncOnlyNewUpdates.setChecked(Pref.getInstance(this).getBoolean(Pref.SYNC_ONLY_NEW_UPDATE_PHONES, true));
         mBinding.syncOnlyWithPhone.setChecked(Pref.getInstance(this).getBoolean(Pref.SYNC_WITH_PHONES_ONLY, true));
         mBinding.autoCheckUpdateApk.setChecked(Pref.getInstance(this).getBoolean(Pref.AUTO_CHECK_UPDATE_APK, true));
+        if (!PERMISSION_READ_STORAGE_GRANTED && mBinding.autoCheckUpdateApk.isChecked()){
+            mBinding.autoCheckUpdateApk.setChecked(false);
+        }
         super.onStart();
     }
 

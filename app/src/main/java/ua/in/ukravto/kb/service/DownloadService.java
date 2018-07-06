@@ -14,6 +14,7 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.FileProvider;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -63,7 +64,7 @@ public class DownloadService extends IntentService {
                 new AsyncTask<Void, Void, Boolean>() {
                     @Override
                     protected Boolean doInBackground(Void... voids) {
-                        boolean writtenToDisk = writeResponseBodyToDisk(getApplicationContext(), resp, mBuilder, notificationManager);
+                        boolean writtenToDisk = writeResponseBodyToDisk(resp, mBuilder, notificationManager);
 
                         Log.d(TAG, "file download was a success? " + writtenToDisk);
                         return writtenToDisk;
@@ -110,7 +111,7 @@ public class DownloadService extends IntentService {
         return intent;
     }
 
-    private boolean writeResponseBodyToDisk(Context ctx, Response<ResponseBody> response, NotificationCompat.Builder mBuilder, NotificationManagerCompat notificationManager) {
+    private boolean writeResponseBodyToDisk(Response<ResponseBody> response, NotificationCompat.Builder mBuilder, NotificationManagerCompat notificationManager) {
         try {
             ResponseBody body = response.body();
 
@@ -153,6 +154,7 @@ public class DownloadService extends IntentService {
 
                 return true;
             } catch (IOException e) {
+
                 return false;
             } finally {
                 if (inputStream != null) {
