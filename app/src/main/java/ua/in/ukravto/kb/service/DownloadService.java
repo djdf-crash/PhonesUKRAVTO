@@ -57,6 +57,7 @@ public class DownloadService extends IntentService {
                 final NotificationCompat.Builder mBuilder = NotificationBuilderHelper.buildMessage(getApplicationContext(),
                         getString(R.string.title_notif_download),
                         getString(R.string.text_notif_download),
+                        getString(R.string.text_notif_download),
                         NotificationCompat.PRIORITY_LOW,
                         NotificationCompat.CATEGORY_PROGRESS);
 

@@ -179,6 +179,7 @@ public class ContactsSyncAdapterService extends Service {
             NotificationCompat.Builder mBuilder = NotificationBuilderHelper.buildMessage(ctx,
                     ctx.getString(R.string.title_new_version_app),
                     ctx.getString(R.string.text_new_version_app),
+                    ctx.getString(R.string.big_text_new_version_change_log),
                     NotificationCompat.PRIORITY_DEFAULT,
                     NotificationCompat.CATEGORY_MESSAGE);
             mBuilder.setContentIntent(pendingIntent);
