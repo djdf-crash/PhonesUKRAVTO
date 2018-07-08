@@ -10,6 +10,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SyncResult;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
@@ -179,9 +180,12 @@ public class ContactsSyncAdapterService extends Service {
             NotificationCompat.Builder mBuilder = NotificationBuilderHelper.buildMessage(ctx,
                     ctx.getString(R.string.title_new_version_app),
                     ctx.getString(R.string.text_new_version_app),
-                    ctx.getString(R.string.big_text_new_version_change_log),
                     NotificationCompat.PRIORITY_DEFAULT,
                     NotificationCompat.CATEGORY_MESSAGE);
+            mBuilder.setLargeIcon(BitmapFactory.decodeResource(ctx.getResources(),
+                    R.mipmap.ic_launcher));
+            mBuilder.setStyle(new NotificationCompat.BigTextStyle()
+                    .bigText(ctx.getString(R.string.big_text_new_version_change_log)));
             mBuilder.setContentIntent(pendingIntent);
             NotificationManagerCompat notificationManager = NotificationManagerCompat.from(ctx);
             notificationManager.notify(1, mBuilder.build());

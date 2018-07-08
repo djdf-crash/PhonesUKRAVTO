@@ -15,20 +15,16 @@ public class NotificationBuilderHelper {
 
     public static final String CHANNEL_ID = "kb.ukravto.in.ua";
 
-    public static NotificationCompat.Builder buildMessage(Context ctx, String title, String text, String bigText,int priority, String category) {
+    public static NotificationCompat.Builder buildMessage(Context ctx, String title, String text, int priority, String category) {
 
         createNotificationChannel(ctx);
 
         return new NotificationCompat.Builder(ctx, CHANNEL_ID)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(title)
-                .setLargeIcon(BitmapFactory.decodeResource(ctx.getResources(),
-                        R.mipmap.ic_launcher))
                 .setContentText(text)
                 .setPriority(priority)
                 .setCategory(category)
-                .setStyle(new NotificationCompat.BigTextStyle()
-                        .bigText(bigText))
                 .setOnlyAlertOnce(true)
                 .setAutoCancel(true);
     }
