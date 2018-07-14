@@ -30,7 +30,7 @@ public class ContactsManager {
         contactOp.addName(rawContact.getFullName())
                 .addEmail(rawContact.getEmail())
                 .addPhone(rawContact.getRealPhone(), ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE)
-                .addOrganizationAndPost(rawContact.getOrganizationName(), rawContact.getPost());
+                .addOrganizationAndDepartmentAndPost(rawContact);
     }
 
     private static void deleteContact(long rawContactId, BatchOperation batchOperation) {
@@ -85,10 +85,12 @@ public class ContactsManager {
                     case ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE:
                         if (!TextUtils.isEmpty(c.getString(DataQuery.COLUMN_ORGANIZATION_NAME))) {
                             existingOrganizationName = true;
-                            contactOp.updateOrganizationAndPost(uri, c.getString(DataQuery.COLUMN_ORGANIZATION_NAME),
+                            contactOp.updateOrganizationAndDepartmentAndPost(uri, c.getString(DataQuery.COLUMN_ORGANIZATION_NAME),
                                     c.getString(DataQuery.COLUMN_ORGANIZATION_POST),
+                                    c.getString(DataQuery.COLUMN_DEPARTMENT),
                                     rawContact.getOrganizationName(),
-                                    rawContact.getPost());
+                                    rawContact.getPost(),
+                                    rawContact.getDepartment() + " " + rawContact.getSection());
                         }
 //                    if (!TextUtils.isEmpty(c.getString(DataQuery.COLUMN_ORGANIZATION_POST))){
 //                        existingPostName = true;
@@ -109,7 +111,7 @@ public class ContactsManager {
         }
 
         if (!existingOrganizationName){
-            contactOp.addOrganizationAndPost(rawContact.getOrganizationName(), rawContact.getPost());
+            contactOp.addOrganizationAndDepartmentAndPost(rawContact);
         }
 
         // Add the email address, if present and not updated above
@@ -268,8 +270,16 @@ public class ContactsManager {
         }
 
         static final String[] PROJECTION =
-                new String[] {ContactsContract.RawContacts.Data._ID, ContactsContract.RawContacts.SOURCE_ID, ContactsContract.RawContacts.Data.MIMETYPE, ContactsContract.RawContacts.Data.DATA1,
-                        ContactsContract.RawContacts.Data.DATA2, ContactsContract.RawContacts.Data.DATA3, ContactsContract.RawContacts.Data.DATA4, ContactsContract.RawContacts.Data.DATA15, ContactsContract.RawContacts.Data.SYNC1};
+                new String[] {ContactsContract.RawContacts.Data._ID,
+                        ContactsContract.RawContacts.SOURCE_ID,
+                        ContactsContract.RawContacts.Data.MIMETYPE,
+                        ContactsContract.RawContacts.Data.DATA1,
+                        ContactsContract.RawContacts.Data.DATA2,
+                        ContactsContract.RawContacts.Data.DATA3,
+                        ContactsContract.RawContacts.Data.DATA4,
+                        ContactsContract.RawContacts.Data.DATA5,
+                        ContactsContract.RawContacts.Data.DATA15,
+                        ContactsContract.RawContacts.Data.SYNC1};
 
         static final int COLUMN_ID = 0;
         public static final int COLUMN_SERVER_ID = 1;
@@ -278,8 +288,7 @@ public class ContactsManager {
         static final int COLUMN_DATA2 = 4;
         static final int COLUMN_DATA3 = 5;
         static final int COLUMN_DATA4 = 6;
-        public static final int COLUMN_DATA15 = 7;
-        static final int COLUMN_SYNC1 = 8;
+        public static final int COLUMN_DATA5 = 7;
 
         static final Uri CONTENT_URI = ContactsContract.Data.CONTENT_URI;
 
@@ -291,6 +300,7 @@ public class ContactsManager {
         static final int COLUMN_FAMILY_NAME = COLUMN_DATA3;
         static final int COLUMN_ORGANIZATION_NAME = COLUMN_DATA1;
         static final int COLUMN_ORGANIZATION_POST = COLUMN_DATA4;
+        static final int COLUMN_DEPARTMENT = COLUMN_DATA5;
         static final int COLUMN_POST_NAME = COLUMN_DATA2;
 
         static final String SELECTION = ContactsContract.RawContacts.Data.RAW_CONTACT_ID + "=?";

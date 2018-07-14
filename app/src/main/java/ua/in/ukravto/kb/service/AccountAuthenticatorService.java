@@ -57,6 +57,8 @@ public class AccountAuthenticatorService extends Service {
         @Override
         public Bundle getAccountRemovalAllowed(AccountAuthenticatorResponse response, Account account) throws NetworkErrorException {
             Pref.getInstance(mContext).edit().putString(Pref.USER_TOKEN,"").apply();
+            Pref.getInstance(mContext).edit().putString(Pref.DELETE_ORGANIZATIONS,"").apply();
+            Pref.getInstance(mContext).edit().putString(Pref.SAVED_ORGANIZATIONS,"").apply();
             return super.getAccountRemovalAllowed(response, account);
         }
 

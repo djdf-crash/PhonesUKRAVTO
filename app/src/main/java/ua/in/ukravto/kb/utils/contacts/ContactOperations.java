@@ -8,6 +8,7 @@ import android.provider.ContactsContract;
 import android.text.TextUtils;
 
 import ua.in.ukravto.kb.R;
+import ua.in.ukravto.kb.repository.database.model.EmployeePhoneModel;
 
 /**
  * Created by djdf.crash on 23.06.2018.
@@ -138,11 +139,12 @@ public class ContactOperations {
         return this;
     }
 
-    public ContactOperations addOrganizationAndPost(String orgName, String post) {
+    public ContactOperations addOrganizationAndDepartmentAndPost(EmployeePhoneModel rawContact) {
         mValues.clear();
-        if (!TextUtils.isEmpty(orgName)) {
-            mValues.put(ContactsContract.CommonDataKinds.Organization.COMPANY, orgName);
-            mValues.put(ContactsContract.CommonDataKinds.Organization.TITLE, post);
+        if (!TextUtils.isEmpty(rawContact.getOrganizationName())) {
+            mValues.put(ContactsContract.CommonDataKinds.Organization.COMPANY, rawContact.getOrganizationName());
+            mValues.put(ContactsContract.CommonDataKinds.Organization.DEPARTMENT, rawContact.getDepartment() + " " + rawContact.getSection());
+            mValues.put(ContactsContract.CommonDataKinds.Organization.TITLE, rawContact.getPost());
             mValues.put(ContactsContract.CommonDataKinds.Organization.TYPE, ContactsContract.CommonDataKinds.Organization.TYPE_OTHER);
             mValues.put(ContactsContract.CommonDataKinds.Organization.MIMETYPE, ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE);
             addInsertOp();
@@ -253,7 +255,7 @@ public class ContactOperations {
         return this;
     }
 
-    public ContactOperations updateOrganizationAndPost(Uri uri, String existingOrg, String existingPost, String nameOrganization, String post) {
+    public ContactOperations updateOrganizationAndDepartmentAndPost(Uri uri, String existingOrg, String existingPost, String existingDep, String nameOrganization, String post, String department) {
 
         mValues.clear();
         if (!TextUtils.isEmpty(nameOrganization)) {
@@ -262,6 +264,9 @@ public class ContactOperations {
             }
             if (!TextUtils.equals(existingPost, post)) {
                 mValues.put(ContactsContract.CommonDataKinds.Organization.TITLE, post);
+            }
+            if (!TextUtils.equals(existingDep, department)) {
+                mValues.put(ContactsContract.CommonDataKinds.Organization.DEPARTMENT, department);
             }
         }
         if (mValues.size() > 0) {

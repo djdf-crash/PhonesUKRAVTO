@@ -16,10 +16,16 @@ public class EmployeePhoneModel {
     @SerializedName("email")
     @Expose
     private String email;
-    @SerializedName("ContactInfo")
+    @SerializedName("contact_info")
     @Expose
     private String contactInfo;
-    @SerializedName("Phone")
+    @SerializedName("department")
+    @Expose
+    private String department;
+    @SerializedName("section")
+    @Expose
+    private String section;
+    @SerializedName("phone")
     @Expose
     private String phone;
     @SerializedName("organization_name")
@@ -126,4 +132,19 @@ public class EmployeePhoneModel {
         this.delete = delete;
     }
 
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+
+    public String getSection() {
+        return section;
+    }
+
+    public void setSection(String section) {
+        this.section = section;
+    }
 }
