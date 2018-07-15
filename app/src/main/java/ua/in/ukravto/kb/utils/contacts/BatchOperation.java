@@ -20,7 +20,7 @@ public class BatchOperation {
     // List for storing the batch mOperations
     ArrayList<ContentProviderOperation> mOperations;
 
-    public BatchOperation(Context context, ContentResolver resolver) {
+    public BatchOperation(ContentResolver resolver) {
         mResolver = resolver;
         mOperations = new ArrayList<>();
     }
@@ -31,6 +31,10 @@ public class BatchOperation {
 
     public void add(ContentProviderOperation cpo) {
         mOperations.add(cpo);
+    }
+
+    public void clear(){
+        mOperations.clear();
     }
 
     public void execute() {

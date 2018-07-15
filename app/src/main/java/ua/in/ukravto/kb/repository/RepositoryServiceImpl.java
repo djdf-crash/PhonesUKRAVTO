@@ -164,7 +164,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         if (!isNetworkAvailable(mCtx)) {
             ResponseString<String> stringResponseString = new ResponseString<>();
             stringResponseString.setError(mCtx.getString(R.string.check_internet_connection));
-            stringResponseString.setResult(false);
+            stringResponseString.setResult(true);
             existTokenLiveData.setValue(stringResponseString);
             return;
         }

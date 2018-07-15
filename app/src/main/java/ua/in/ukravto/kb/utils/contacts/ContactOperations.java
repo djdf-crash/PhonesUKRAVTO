@@ -114,7 +114,7 @@ public class ContactOperations {
         mValues.clear();
         if (!TextUtils.isEmpty(email)) {
             mValues.put(ContactsContract.CommonDataKinds.Email.DATA, email);
-            mValues.put(ContactsContract.CommonDataKinds.Email.TYPE, ContactsContract.CommonDataKinds.Email.TYPE_OTHER);
+            mValues.put(ContactsContract.CommonDataKinds.Email.TYPE, ContactsContract.CommonDataKinds.Email.TYPE_WORK);
             mValues.put(ContactsContract.CommonDataKinds.Email.MIMETYPE, ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE);
             addInsertOp();
         }
@@ -141,11 +141,28 @@ public class ContactOperations {
 
     public ContactOperations addOrganizationAndDepartmentAndPost(EmployeePhoneModel rawContact) {
         mValues.clear();
+
+        StringBuilder dep = new StringBuilder();
+        if (!TextUtils.isEmpty(rawContact.getDepartment())){
+            dep.append(rawContact.getDepartment());
+//            if (!TextUtils.isEmpty(rawContact.getSection())){
+//                dep.append(", ").append(rawContact.getSection());
+//            }
+        }else if (!TextUtils.isEmpty(rawContact.getSection())){
+            dep.append(rawContact.getSection());
+        }
+
+        if (!TextUtils.isEmpty(dep.toString())) {
+            dep.append(", ").append(rawContact.getPost());
+        }else {
+            dep.append(rawContact.getPost());
+        }
+
         if (!TextUtils.isEmpty(rawContact.getOrganizationName())) {
             mValues.put(ContactsContract.CommonDataKinds.Organization.COMPANY, rawContact.getOrganizationName());
-            mValues.put(ContactsContract.CommonDataKinds.Organization.DEPARTMENT, rawContact.getDepartment() + " " + rawContact.getSection());
-            mValues.put(ContactsContract.CommonDataKinds.Organization.TITLE, rawContact.getPost());
-            mValues.put(ContactsContract.CommonDataKinds.Organization.TYPE, ContactsContract.CommonDataKinds.Organization.TYPE_OTHER);
+            mValues.put(ContactsContract.CommonDataKinds.Organization.DEPARTMENT, dep.toString());
+            mValues.put(ContactsContract.CommonDataKinds.Organization.TITLE, dep.toString());
+            mValues.put(ContactsContract.CommonDataKinds.Organization.TYPE, ContactsContract.CommonDataKinds.Organization.TYPE_WORK);
             mValues.put(ContactsContract.CommonDataKinds.Organization.MIMETYPE, ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE);
             addInsertOp();
         }

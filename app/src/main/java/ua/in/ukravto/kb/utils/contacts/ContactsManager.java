@@ -16,13 +16,19 @@ import ua.in.ukravto.kb.repository.database.model.EmployeePhoneModel;
 import ua.in.ukravto.kb.utils.DataTimeUtils;
 import ua.in.ukravto.kb.utils.Pref;
 
-import static android.support.constraint.Constraints.TAG;
+import static ua.in.ukravto.kb.service.ContactsSyncAdapterService.TAG;
 
 public class ContactsManager {
-    private static final String LOGTAG = "FIND_CONTACT";
-    private static Account mAccount;
+    private final Account mAccount;
+    private final static String mAccountType = "ua.in.ukravto.kb";
+    private final Context ctx;
 
-    public static void addContact(Context context, Account account, EmployeePhoneModel rawContact, boolean inSync, BatchOperation batchOperation) {
+    public ContactsManager(Context ctx, Account mAccount) {
+        this.mAccount = mAccount;
+        this.ctx = ctx;
+    }
+
+    private void addContact(Context context, Account account, EmployeePhoneModel rawContact, boolean inSync, BatchOperation batchOperation) {
 
         final ContactOperations contactOp = ContactOperations.createNewContact(
                 context, rawContact.getID(), account.name, inSync, batchOperation);
@@ -33,23 +39,23 @@ public class ContactsManager {
                 .addOrganizationAndDepartmentAndPost(rawContact);
     }
 
-    private static void deleteContact(long rawContactId, BatchOperation batchOperation) {
+    private void deleteContact(long rawContactId, BatchOperation batchOperation) {
 
         batchOperation.add(ContactOperations.newDeleteCpo(
                 ContentUris.withAppendedId(ContactsContract.RawContacts.CONTENT_URI, rawContactId),
                 true, true).build());
     }
 
-    public static void updateContact(Context context, ContentResolver resolver,
-                                     EmployeePhoneModel rawContact, boolean updateServerId,
-                                     boolean inSync, long rawContactId, BatchOperation batchOperation) {
+    private void updateContact(Context context, ContentResolver resolver,
+                               EmployeePhoneModel rawContact,
+                               long rawContactId, BatchOperation batchOperation) {
 
         boolean existingCellPhone = false;
         boolean existingFullName = false;
         boolean existingOrganizationName = false;
         boolean existingEmail = false;
 
-        final ContactOperations contactOp = ContactOperations.updateExistingContact(context, rawContactId, inSync, batchOperation);
+        final ContactOperations contactOp = ContactOperations.updateExistingContact(context, rawContactId, true, batchOperation);
         try (Cursor c = resolver.query(DataQuery.CONTENT_URI, DataQuery.PROJECTION, DataQuery.SELECTION,
                 new String[]{String.valueOf(rawContactId)}, null)) {
             // Iterate over the existing rows of data, and update each one
@@ -83,15 +89,34 @@ public class ContactsManager {
                                 c.getString(DataQuery.COLUMN_EMAIL_ADDRESS), uri);
                         break;
                     case ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE:
-                        if (!TextUtils.isEmpty(c.getString(DataQuery.COLUMN_ORGANIZATION_NAME))) {
+                        //if (!TextUtils.isEmpty(c.getString(DataQuery.COLUMN_ORGANIZATION_NAME))) {
                             existingOrganizationName = true;
-                            contactOp.updateOrganizationAndDepartmentAndPost(uri, c.getString(DataQuery.COLUMN_ORGANIZATION_NAME),
+
+                            StringBuilder dep = new StringBuilder();
+                            if (!TextUtils.isEmpty(rawContact.getDepartment())){
+                                dep.append(rawContact.getDepartment());
+//                                if (!TextUtils.isEmpty(rawContact.getSection())){
+//                                    dep.append(", ").append(rawContact.getSection());
+//                                }
+                            }else if (!TextUtils.isEmpty(rawContact.getSection())){
+                                dep.append(rawContact.getSection());
+                            }
+
+                        if (!TextUtils.isEmpty(dep.toString())) {
+                            dep.append(", ").append(rawContact.getPost());
+                        }else {
+                            dep.append(rawContact.getPost());
+                        }
+
+                            contactOp.updateOrganizationAndDepartmentAndPost(
+                                    uri,
+                                    c.getString(DataQuery.COLUMN_ORGANIZATION_NAME),
                                     c.getString(DataQuery.COLUMN_ORGANIZATION_POST),
                                     c.getString(DataQuery.COLUMN_DEPARTMENT),
                                     rawContact.getOrganizationName(),
-                                    rawContact.getPost(),
-                                    rawContact.getDepartment() + " " + rawContact.getSection());
-                        }
+                                    dep.toString(),
+                                    dep.toString());
+                        //}
 //                    if (!TextUtils.isEmpty(c.getString(DataQuery.COLUMN_ORGANIZATION_POST))){
 //                        existingPostName = true;
 //                        contactOp.updatePostName(uri, c.getString(DataQuery.COLUMN_ORGANIZATION_POST), rawContact.getPost());
@@ -126,30 +151,20 @@ public class ContactsManager {
         // record back from the server, we can set the SOURCE_ID property
         // on the contact, so we can (in the future) lookup contacts by
         // the serverId.
-        if (updateServerId) {
+        if (false) {
             Uri uri = ContentUris.withAppendedId(ContactsContract.RawContacts.CONTENT_URI, rawContactId);
             contactOp.updateServerId(rawContact.getID(), uri);
         }
-
-//        // If we don't have a status profile, then create one.  This could
-//        // happen for contacts that were created on the client - we don't
-//        // create the status profile until after the first sync...
-//        final long serverId = rawContact.getID();
-//        final long profileId = lookupProfile(resolver, serverId);
-//        if (profileId <= 0) {
-//            contactOp.addProfileAction(serverId);
-//        }
     }
 
-    public static long syncContacts(Context context, Account account, List<EmployeePhoneModel> employees, long lastSyncMarker) {
+    public long syncContacts(List<EmployeePhoneModel> employees, long lastSyncMarker) {
 
-        mAccount = account;
         long currentSyncMarker = lastSyncMarker;
 
-        boolean syncWithPhoneOnly = Pref.getInstance(context).getBoolean(Pref.SYNC_WITH_PHONES_ONLY, false);
+        boolean syncWithPhoneOnly = Pref.getInstance(ctx).getBoolean(Pref.SYNC_WITH_PHONES_ONLY, false);
 
-        final ContentResolver resolver = context.getContentResolver();
-        final BatchOperation batchOperation = new BatchOperation(context, resolver);
+        final ContentResolver resolver = ctx.getContentResolver();
+        BatchOperation batchOperation = new BatchOperation(resolver);
 
         for (EmployeePhoneModel rawContact : employees) {
 
@@ -164,20 +179,28 @@ public class ContactsManager {
             }
 
             long serverContactId = rawContact.getID();
-            rawContactId = lookupRawContact(context, resolver, serverContactId);
+            rawContactId = lookupRawContact(resolver, serverContactId);
 
             if (rawContactId != 0) {
                 if (!rawContact.isDelete()) {
-                    updateContact(context, resolver, rawContact, false,
-                            true, rawContactId, batchOperation);
+                    updateContact(ctx, resolver, rawContact,
+                            rawContactId, batchOperation);
+                    Log.d(TAG, "In updateContact: " + rawContact.getFullName() + " | org:" + rawContact.getOrganizationName());
                 } else {
                     deleteContact(rawContactId, batchOperation);
+                    Log.d(TAG, "In deleteContact: " + rawContact.getFullName() + " | org:" + rawContact.getOrganizationName());
                 }
             } else {
                 Log.d(TAG, "In addContact: " + rawContact.getFullName() + " | org:" + rawContact.getOrganizationName());
                 if (!rawContact.isDelete()) {
-                    addContact(context, account, rawContact, true, batchOperation);
+                    addContact(ctx, mAccount, rawContact, true, batchOperation);
                 }
+            }
+
+            if (batchOperation.size() == 15){
+                Log.d(TAG, "batchOperation.execute() | org:" + rawContact.getOrganizationName());
+                batchOperation.execute();
+                batchOperation.clear();
             }
         }
 
@@ -186,16 +209,16 @@ public class ContactsManager {
         return currentSyncMarker;
     }
 
-    private static long lookupRawContact(Context context, ContentResolver resolver, long serverContactId) {
+    private long lookupRawContact(ContentResolver resolver, long serverContactId) {
 
         long rawContactId = 0;
-        final Cursor c = resolver.query(
+
+        try (Cursor c = resolver.query(
                 UserIdQuery.CONTENT_URI,
                 UserIdQuery.PROJECTION,
                 UserIdQuery.SELECTION,
                 new String[] {String.valueOf(serverContactId)},
-                null);
-        try {
+                null)) {
             if ((c != null) && c.moveToFirst()) {
                 do {
                     if (c.getInt(UserIdQuery.COLUMN_RAW_DELETED) == 1) {
@@ -206,61 +229,60 @@ public class ContactsManager {
                     }
                 }while (c.moveToNext());
             }
-        } finally {
-            if (c != null) {
-                c.close();
-            }
         }
         return rawContactId;
     }
 
-    private static void restoreContact(Context context, long rawContactId) {
-        final ContentResolver resolver = context.getContentResolver();
-        final BatchOperation batchOperation = new BatchOperation(context, resolver);
-        final ContactOperations contactOp = ContactOperations.updateExistingContact(context, rawContactId, true, batchOperation);
-        final Uri uri = ContentUris.withAppendedId(ContactsContract.Data.CONTENT_URI, rawContactId);
-        contactOp.updateIsDelete(0, uri);
-        batchOperation.execute();
-    }
+//    private void restoreContact(Context context, long rawContactId) {
+//        final ContentResolver resolver = context.getContentResolver();
+//        final BatchOperation batchOperation = new BatchOperation(context, resolver);
+//        final ContactOperations contactOp = ContactOperations.updateExistingContact(context, rawContactId, true, batchOperation);
+//        final Uri uri = ContentUris.withAppendedId(ContactsContract.Data.CONTENT_URI, rawContactId);
+//        contactOp.updateIsDelete(0, uri);
+//        batchOperation.execute();
+//    }
 
-    public static void deleteContacts(Context context, Account account, List<EmployeePhoneModel> employees) {
-        mAccount = account;
-
-        final ContentResolver resolver = context.getContentResolver();
-        final BatchOperation batchOperation = new BatchOperation(context, resolver);
+    public void deleteContacts(List<EmployeePhoneModel> employees) {
+        final ContentResolver resolver = ctx.getContentResolver();
+        final BatchOperation batchOperation = new BatchOperation(resolver);
 
         for (EmployeePhoneModel rawContact : employees) {
             final long rawContactId;
 
             long serverContactId = rawContact.getID();
-            rawContactId = lookupRawContact(context, resolver, serverContactId);
+            rawContactId = lookupRawContact(resolver, serverContactId);
 
             if (rawContactId != 0) {
                 deleteContact(rawContactId, batchOperation);
+            }
+            if (batchOperation.size() == 15){
+                Log.d(TAG, "batchOperation.execute() | org:" + rawContact.getOrganizationName());
+                batchOperation.execute();
+                batchOperation.clear();
             }
         }
 
         batchOperation.execute();
     }
 
-    final private static class UserIdQuery {
+    final static class UserIdQuery {
 
         private UserIdQuery() {
         }
 
-        final static String[] PROJECTION = new String[] {
+        static final String[] PROJECTION = new String[] {
                 ContactsContract.RawContacts._ID,
                 ContactsContract.RawContacts.CONTACT_ID,
                 ContactsContract.RawContacts.DELETED
         };
 
-        final static int COLUMN_RAW_CONTACT_ID = 0;
-        final static int COLUMN_RAW_DELETED = 2;
+        static final int COLUMN_RAW_CONTACT_ID = 0;
+        static final int COLUMN_RAW_DELETED = 2;
 
-        final static Uri CONTENT_URI = ContactsContract.RawContacts.CONTENT_URI;
+        static final Uri CONTENT_URI = ContactsContract.RawContacts.CONTENT_URI;
 
         static final String SELECTION =
-                ContactsContract.RawContacts.ACCOUNT_TYPE + "='" + mAccount.type + "' AND "
+                ContactsContract.RawContacts.ACCOUNT_TYPE + "='" + mAccountType + "' AND "
                         + ContactsContract.RawContacts.SOURCE_ID + "=?";
     }
 
@@ -282,13 +304,13 @@ public class ContactsManager {
                         ContactsContract.RawContacts.Data.SYNC1};
 
         static final int COLUMN_ID = 0;
-        public static final int COLUMN_SERVER_ID = 1;
+//        public static final int COLUMN_SERVER_ID = 1;
         static final int COLUMN_MIMETYPE = 2;
         static final int COLUMN_DATA1 = 3;
         static final int COLUMN_DATA2 = 4;
         static final int COLUMN_DATA3 = 5;
         static final int COLUMN_DATA4 = 6;
-        public static final int COLUMN_DATA5 = 7;
+        static final int COLUMN_DATA5 = 7;
 
         static final Uri CONTENT_URI = ContactsContract.Data.CONTENT_URI;
 
@@ -301,22 +323,8 @@ public class ContactsManager {
         static final int COLUMN_ORGANIZATION_NAME = COLUMN_DATA1;
         static final int COLUMN_ORGANIZATION_POST = COLUMN_DATA4;
         static final int COLUMN_DEPARTMENT = COLUMN_DATA5;
-        static final int COLUMN_POST_NAME = COLUMN_DATA2;
+//        static final int COLUMN_POST_NAME = COLUMN_DATA2;
 
         static final String SELECTION = ContactsContract.RawContacts.Data.RAW_CONTACT_ID + "=?";
-    }
-
-    /**
-     * Constants for a query to read basic contact columns
-     */
-    final public static class ContactQuery {
-        private ContactQuery() {
-        }
-
-        public static final String[] PROJECTION =
-                new String[] {ContactsContract.Contacts._ID, ContactsContract.Contacts.DISPLAY_NAME};
-
-        public static final int COLUMN_ID = 0;
-        public static final int COLUMN_DISPLAY_NAME = 1;
     }
 }

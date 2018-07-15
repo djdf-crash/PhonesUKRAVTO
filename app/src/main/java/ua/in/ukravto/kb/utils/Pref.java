@@ -18,7 +18,9 @@ public class Pref {
     private static SharedPreferences sp;
 
     public static SharedPreferences getInstance(Context ctx){
-        sp = ctx.getSharedPreferences(NAME_SHARED_PREF, Context.MODE_PRIVATE);
+        if (sp == null) {
+            sp = ctx.getSharedPreferences(NAME_SHARED_PREF, Context.MODE_PRIVATE);
+        }
         return sp;
     }
 

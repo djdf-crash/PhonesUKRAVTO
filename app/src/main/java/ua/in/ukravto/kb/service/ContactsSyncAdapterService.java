@@ -41,7 +41,7 @@ import ua.in.ukravto.kb.utils.NotificationBuilderHelper;
 import ua.in.ukravto.kb.utils.Pref;
 
 public class ContactsSyncAdapterService extends Service {
-    private static final String TAG = "ContactsSyncAdapterS";
+    public static final String TAG = "ContactsSyncAdapterS";
     private static ContentResolver mContentResolver = null;
     private static SyncAdapterImpl sSyncAdapter = null;
     public static final String SYNC_MARKER_KEY = "ua.in.ukravto.kb.samplesync.marker";
@@ -70,7 +70,7 @@ public class ContactsSyncAdapterService extends Service {
 
         Gson mGson = new Gson();
 
-        Type type = new TypeToken<List<EmployeeOrganizationModel>>() {}.getType();
+        final Type type = new TypeToken<List<EmployeeOrganizationModel>>() {}.getType();
 
         syncDeleteContacts(context, account, syncResult, token, mGson, type);
 
@@ -90,6 +90,8 @@ public class ContactsSyncAdapterService extends Service {
             listSavedOrganization = new ArrayList<>();
         }
 
+        final ContactsManager cm = new ContactsManager(context, account);
+
         Log.d(TAG, "org list: " + listSavedOrganization.size());
 
         try {
@@ -101,10 +103,10 @@ public class ContactsSyncAdapterService extends Service {
                 }else {
                     response = RetrofitHelper.getPhoneService().getPhonesOrganizationID(organizationModel.getID(), token).execute();
                 }
-                if (response.isSuccessful()) {
-                    if (response.body() != null || response.body().getBody() != null) {
+                if (response.isSuccessful() && response.body() != null) {
+                    if (response.body().getBody() != null) {
                         Log.d(TAG, "size org: " + response.body().getBody().size());
-                        newSyncState = ContactsManager.syncContacts(context, account, response.body().getBody(), lastSyncMarker);
+                        newSyncState = cm.syncContacts(response.body().getBody(), lastSyncMarker);
                     }
                 }
             }
@@ -120,6 +122,8 @@ public class ContactsSyncAdapterService extends Service {
 
     private static void syncDeleteContacts(Context context, Account account, SyncResult syncResult, String token, Gson mGson, Type type) {
 
+        final ContactsManager cm = new ContactsManager(context, account);
+
         String deleteOrganizationsString = Pref.getInstance(context).getString(Pref.DELETE_ORGANIZATIONS, "");
         List<EmployeeOrganizationModel> listDeleteOrganization = mGson.fromJson(deleteOrganizationsString, type);
 
@@ -133,11 +137,11 @@ public class ContactsSyncAdapterService extends Service {
         for (EmployeeOrganizationModel delOrganizationModel : listDeleteOrganization) {
             Log.d(TAG, "org name del: " + delOrganizationModel.getName());
             try {
-                Response<PhoneResponse<EmployeePhoneModel>> response = RetrofitHelper.getPhoneService().getPhonesOrganizationID(delOrganizationModel.getID(), token).execute();
+                final Response<PhoneResponse<EmployeePhoneModel>> response = RetrofitHelper.getPhoneService().getPhonesOrganizationID(delOrganizationModel.getID(), token).execute();
                 if (response.isSuccessful()) {
                     if (response.body() != null || response.body().getBody() != null) {
                         Log.d(TAG, "size org del: " + response.body().getBody().size());
-                        ContactsManager.deleteContacts(context, account, response.body().getBody());
+                        cm.deleteContacts(response.body().getBody());
                     }
                 }
             } catch (IOException e) {

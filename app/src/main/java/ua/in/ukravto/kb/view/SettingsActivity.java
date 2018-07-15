@@ -46,12 +46,14 @@ public class SettingsActivity extends AppCompatActivity {
     private String mToken;
     private LoadToast mLoadToast;
 
-    private static boolean PERMISSION_READ_STORAGE_GRANTED = false;
+    private boolean PERMISSION_READ_STORAGE_GRANTED;
     private static final int REQUEST_PERMISSIONS_STORAGE = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        PERMISSION_READ_STORAGE_GRANTED = false;
 
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_settings);
         mViewModel = ViewModelProviders.of(this).get(SettingsViewModel.class);
@@ -116,6 +118,37 @@ public class SettingsActivity extends AppCompatActivity {
             }
         });
 
+        mBinding.syncOnlyNewUpdates.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                Pref.getInstance(getApplicationContext()).edit().putBoolean(Pref.SYNC_ONLY_NEW_UPDATE_PHONES, isChecked).apply();
+            }
+        });
+
+        mBinding.syncOnlyWithPhone.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                Pref.getInstance(getApplicationContext()).edit().putBoolean(Pref.SYNC_WITH_PHONES_ONLY, isChecked).apply();
+            }
+        });
+        mBinding.autoCheckUpdateApk.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                Pref.getInstance(getApplicationContext()).edit().putBoolean(Pref.AUTO_CHECK_UPDATE_APK, isChecked).apply();
+            }
+        });
+
+        mBinding.syncOnlyNewUpdates.setChecked(Pref.getInstance(this).getBoolean(Pref.SYNC_ONLY_NEW_UPDATE_PHONES, true));
+        mBinding.syncOnlyWithPhone.setChecked(Pref.getInstance(this).getBoolean(Pref.SYNC_WITH_PHONES_ONLY, true));
+        mBinding.autoCheckUpdateApk.setChecked(Pref.getInstance(this).getBoolean(Pref.AUTO_CHECK_UPDATE_APK, true));
+
+        checkPermissionWriteExternalStorage();
+
+        if (!PERMISSION_READ_STORAGE_GRANTED && mBinding.autoCheckUpdateApk.isChecked()){
+            mBinding.autoCheckUpdateApk.setChecked(false);
+            Pref.getInstance(getApplicationContext()).edit().putBoolean(Pref.AUTO_CHECK_UPDATE_APK, false).apply();
+        }
+
         mAccountManager = AccountManager.get(getApplicationContext());
 
         List<Account> accountList = AccountHelper.findAccountsByType(mAccountManager, getString(R.string.ACCOUNT_TYPE));
@@ -165,22 +198,9 @@ public class SettingsActivity extends AppCompatActivity {
 
     @Override
     protected void onStart() {
-        checkPermissionWriteExternalStorage();
-        mBinding.syncOnlyNewUpdates.setChecked(Pref.getInstance(this).getBoolean(Pref.SYNC_ONLY_NEW_UPDATE_PHONES, true));
-        mBinding.syncOnlyWithPhone.setChecked(Pref.getInstance(this).getBoolean(Pref.SYNC_WITH_PHONES_ONLY, true));
-        mBinding.autoCheckUpdateApk.setChecked(Pref.getInstance(this).getBoolean(Pref.AUTO_CHECK_UPDATE_APK, true));
-        if (!PERMISSION_READ_STORAGE_GRANTED && mBinding.autoCheckUpdateApk.isChecked()){
-            mBinding.autoCheckUpdateApk.setChecked(false);
-        }
-        super.onStart();
-    }
 
-    @Override
-    protected void onPause() {
-        Pref.getInstance(getApplicationContext()).edit().putBoolean(Pref.SYNC_ONLY_NEW_UPDATE_PHONES, mBinding.syncOnlyNewUpdates.isChecked()).apply();
-        Pref.getInstance(getApplicationContext()).edit().putBoolean(Pref.SYNC_WITH_PHONES_ONLY, mBinding.syncOnlyWithPhone.isChecked()).apply();
-        Pref.getInstance(getApplicationContext()).edit().putBoolean(Pref.AUTO_CHECK_UPDATE_APK, mBinding.autoCheckUpdateApk.isChecked()).apply();
-        super.onPause();
+
+        super.onStart();
     }
 
     private void checkPermissionWriteExternalStorage() {
