@@ -89,15 +89,12 @@ public class ContactsManager {
                                 c.getString(DataQuery.COLUMN_EMAIL_ADDRESS), uri);
                         break;
                     case ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE:
-                        //if (!TextUtils.isEmpty(c.getString(DataQuery.COLUMN_ORGANIZATION_NAME))) {
+                        if (!TextUtils.isEmpty(c.getString(DataQuery.COLUMN_ORGANIZATION_NAME))) {
                             existingOrganizationName = true;
 
                             StringBuilder dep = new StringBuilder();
                             if (!TextUtils.isEmpty(rawContact.getDepartment())){
                                 dep.append(rawContact.getDepartment());
-//                                if (!TextUtils.isEmpty(rawContact.getSection())){
-//                                    dep.append(", ").append(rawContact.getSection());
-//                                }
                             }else if (!TextUtils.isEmpty(rawContact.getSection())){
                                 dep.append(rawContact.getSection());
                             }
@@ -116,11 +113,8 @@ public class ContactsManager {
                                     rawContact.getOrganizationName(),
                                     dep.toString(),
                                     dep.toString());
-                        //}
-//                    if (!TextUtils.isEmpty(c.getString(DataQuery.COLUMN_ORGANIZATION_POST))){
-//                        existingPostName = true;
-//                        contactOp.updatePostName(uri, c.getString(DataQuery.COLUMN_ORGANIZATION_POST), rawContact.getPost());
-//                    }
+                        }
+
                         break;
                 }
             } // while
@@ -157,11 +151,9 @@ public class ContactsManager {
         }
     }
 
-    public long syncContacts(List<EmployeePhoneModel> employees, long lastSyncMarker) {
+    public long syncContacts(List<EmployeePhoneModel> employees, long lastSyncMarker, boolean syncWithPhoneOnly) {
 
         long currentSyncMarker = lastSyncMarker;
-
-        boolean syncWithPhoneOnly = Pref.getInstance(ctx).getBoolean(Pref.SYNC_WITH_PHONES_ONLY, false);
 
         final ContentResolver resolver = ctx.getContentResolver();
         BatchOperation batchOperation = new BatchOperation(resolver);

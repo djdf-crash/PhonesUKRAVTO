@@ -72,15 +72,30 @@ public class ContactsSyncAdapterService extends Service {
 
         final Type type = new TypeToken<List<EmployeeOrganizationModel>>() {}.getType();
 
-        syncDeleteContacts(context, account, syncResult, token, mGson, type);
+        syncDeleteContacts(context, account, extras, syncResult, token, mGson, type);
 
-        newSyncState = syncUpdateContacts(context, account, syncResult, lastSyncMarker, newSyncState, token, mGson, type);
+        newSyncState = syncUpdateContacts(context, account, extras, syncResult, lastSyncMarker, newSyncState, token, mGson, type);
         setServerSyncMarker(accountManager, account, newSyncState);
     }
 
-    private static long syncUpdateContacts(Context context, Account account, SyncResult syncResult, long lastSyncMarker, long newSyncState, String token, Gson mGson, Type type) {
+    private static long syncUpdateContacts(Context context, Account account, Bundle extras, SyncResult syncResult, long lastSyncMarker, long newSyncState, String token, Gson mGson, Type type) {
 
-        boolean syncOnlyLastUpdate = Pref.getInstance(context).getBoolean(Pref.SYNC_ONLY_NEW_UPDATE_PHONES, true);
+        boolean syncOnlyLastUpdate, syncWithPhoneOnly;
+
+
+        if (extras.containsKey(Pref.SYNC_ONLY_NEW_UPDATE_PHONES)){
+            syncOnlyLastUpdate = extras.getBoolean(Pref.SYNC_ONLY_NEW_UPDATE_PHONES);
+        }else {
+            syncOnlyLastUpdate = Pref.getInstance(context).getBoolean(Pref.SYNC_ONLY_NEW_UPDATE_PHONES, true);
+        }
+
+        if (extras.containsKey(Pref.SYNC_WITH_PHONES_ONLY)){
+            syncWithPhoneOnly = extras.getBoolean(Pref.SYNC_WITH_PHONES_ONLY);
+        }else {
+            syncWithPhoneOnly = Pref.getInstance(context).getBoolean(Pref.SYNC_WITH_PHONES_ONLY, false);
+        }
+
+
         Log.d(TAG, "syncOnlyLastUpdate: " + syncOnlyLastUpdate);
 
         String savedOrganizationsString = Pref.getInstance(context).getString(Pref.SAVED_ORGANIZATIONS, "");
@@ -106,7 +121,7 @@ public class ContactsSyncAdapterService extends Service {
                 if (response.isSuccessful() && response.body() != null) {
                     if (response.body().getBody() != null) {
                         Log.d(TAG, "size org: " + response.body().getBody().size());
-                        newSyncState = cm.syncContacts(response.body().getBody(), lastSyncMarker);
+                        newSyncState = cm.syncContacts(response.body().getBody(), lastSyncMarker, syncWithPhoneOnly);
                     }
                 }
             }
@@ -120,7 +135,7 @@ public class ContactsSyncAdapterService extends Service {
         return newSyncState;
     }
 
-    private static void syncDeleteContacts(Context context, Account account, SyncResult syncResult, String token, Gson mGson, Type type) {
+    private static void syncDeleteContacts(Context context, Account account, Bundle extras, SyncResult syncResult, String token, Gson mGson, Type type) {
 
         final ContactsManager cm = new ContactsManager(context, account);
 
@@ -210,7 +225,14 @@ public class ContactsSyncAdapterService extends Service {
         public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
             performSync(this.mContext, mAccountManager, account, extras, authority, provider, syncResult);
 
-            boolean autoCheckUpdateAPK =  Pref.getInstance(mContext).getBoolean(Pref.AUTO_CHECK_UPDATE_APK, true);
+            boolean autoCheckUpdateAPK;
+
+            if (extras.containsKey(Pref.AUTO_CHECK_UPDATE_APK)){
+                autoCheckUpdateAPK = extras.getBoolean(Pref.AUTO_CHECK_UPDATE_APK);
+            }else {
+                autoCheckUpdateAPK =  Pref.getInstance(mContext).getBoolean(Pref.AUTO_CHECK_UPDATE_APK, true);
+            }
+
             Log.d(TAG, "autoCheckUpadteAPK: " + autoCheckUpdateAPK);
             if (autoCheckUpdateAPK) {
                 checkLastUpdateAPP(mContext);

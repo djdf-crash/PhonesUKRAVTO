@@ -115,6 +115,7 @@ public class SelectOrganizationViewModel extends AndroidViewModel {
     public void checkListOrganization(List<EmployeeOrganizationModel> listOrganization) {
         if (oldListSavedOrganization.size() > 0) {
             for (EmployeeOrganizationModel organizationModel : listOrganization) {
+                organizationModel.setName(organizationModel.getName().toUpperCase());
                 for (EmployeeOrganizationModel savedOrganizationModel : oldListSavedOrganization) {
                     if (organizationModel.getID().equals(savedOrganizationModel.getID())) {
                         organizationModel.setIsChecked(true);

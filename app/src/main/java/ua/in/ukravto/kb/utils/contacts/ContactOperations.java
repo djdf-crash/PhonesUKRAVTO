@@ -145,9 +145,6 @@ public class ContactOperations {
         StringBuilder dep = new StringBuilder();
         if (!TextUtils.isEmpty(rawContact.getDepartment())){
             dep.append(rawContact.getDepartment());
-//            if (!TextUtils.isEmpty(rawContact.getSection())){
-//                dep.append(", ").append(rawContact.getSection());
-//            }
         }else if (!TextUtils.isEmpty(rawContact.getSection())){
             dep.append(rawContact.getSection());
         }
