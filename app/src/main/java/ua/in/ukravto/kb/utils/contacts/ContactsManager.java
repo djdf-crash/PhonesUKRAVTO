@@ -14,7 +14,6 @@ import java.util.List;
 
 import ua.in.ukravto.kb.repository.database.model.EmployeePhoneModel;
 import ua.in.ukravto.kb.utils.DataTimeUtils;
-import ua.in.ukravto.kb.utils.Pref;
 
 import static ua.in.ukravto.kb.service.ContactsSyncAdapterService.TAG;
 
@@ -35,7 +34,8 @@ public class ContactsManager {
 
         contactOp.addName(rawContact.getFullName())
                 .addEmail(rawContact.getEmail())
-                .addPhone(rawContact.getRealPhone(), ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE)
+                .addMobilePhone(rawContact.getPhoneMobile(), ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE)
+                .addMobilePhone(rawContact.getPhone(), ContactsContract.CommonDataKinds.Phone.TYPE_COMPANY_MAIN)
                 .addOrganizationAndDepartmentAndPost(rawContact);
     }
 
@@ -50,7 +50,8 @@ public class ContactsManager {
                                EmployeePhoneModel rawContact,
                                long rawContactId, BatchOperation batchOperation) {
 
-        boolean existingCellPhone = false;
+        boolean existingMobilePhone = false;
+        boolean existingPhone = false;
         boolean existingFullName = false;
         boolean existingOrganizationName = false;
         boolean existingEmail = false;
@@ -78,10 +79,13 @@ public class ContactsManager {
                     case ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE:
                         final int type = c.getInt(DataQuery.COLUMN_PHONE_TYPE);
                         if (type == ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE) {
-                            existingCellPhone = true;
+                            existingMobilePhone = true;
+                            contactOp.updateMobilePhone(c.getString(DataQuery.COLUMN_PHONE_NUMBER),
+                                    rawContact.getPhoneMobile(), uri);
+                        }else if (type == ContactsContract.CommonDataKinds.Phone.TYPE_COMPANY_MAIN)
+                            existingPhone = true;
                             contactOp.updatePhone(c.getString(DataQuery.COLUMN_PHONE_NUMBER),
-                                    rawContact.getRealPhone(), uri);
-                        }
+                                    rawContact.getPhoneMobile(), uri);
                         break;
                     case ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE:
                         existingEmail = true;
@@ -125,8 +129,12 @@ public class ContactsManager {
         }
 
         // Add the cell phone, if present and not updated above
-        if (!existingCellPhone) {
-            contactOp.addPhone(rawContact.getRealPhone(), ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE);
+        if (!existingMobilePhone) {
+            contactOp.addMobilePhone(rawContact.getPhoneMobile(), ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE);
+        }
+
+        if (!existingPhone) {
+            contactOp.addMobilePhone(rawContact.getPhoneMobile(), ContactsContract.CommonDataKinds.Phone.TYPE_COMPANY_MAIN);
         }
 
         if (!existingOrganizationName){
@@ -160,7 +168,7 @@ public class ContactsManager {
 
         for (EmployeePhoneModel rawContact : employees) {
 
-            if (syncWithPhoneOnly && TextUtils.isEmpty(rawContact.getRealPhone())){
+            if (syncWithPhoneOnly && TextUtils.isEmpty(rawContact.getPhoneMobile())){
                 continue;
             }
 

@@ -125,7 +125,7 @@ public class ContactsSyncAdapterService extends Service {
                     }
                 }
             }
-            if (syncOnlyLastUpdate) {
+            if (syncOnlyLastUpdate && listSavedOrganization.size() != 0) {
                 RetrofitHelper.getPhoneService().updateUser(token).execute();
             }
         } catch (IOException e) {

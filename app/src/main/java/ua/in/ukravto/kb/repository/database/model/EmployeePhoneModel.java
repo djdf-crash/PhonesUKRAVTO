@@ -16,9 +16,6 @@ public class EmployeePhoneModel {
     @SerializedName("email")
     @Expose
     private String email;
-    @SerializedName("contact_info")
-    @Expose
-    private String contactInfo;
     @SerializedName("department")
     @Expose
     private String department;
@@ -34,12 +31,18 @@ public class EmployeePhoneModel {
     @SerializedName("OrganizationID")
     @Expose
     private int organizationID;
-    @SerializedName("real_phone")
+    @SerializedName("phone_mobile")
     @Expose
-    private String realPhone;
+    private String phoneMobile;
     @SerializedName("last_update")
     @Expose
     private String lastUpdate;
+    @SerializedName("address")
+    @Expose
+    private String address;
+    @SerializedName("category")
+    @Expose
+    private String category;
     @SerializedName("delete")
     @Expose
     private boolean delete;
@@ -76,14 +79,6 @@ public class EmployeePhoneModel {
         this.email = email;
     }
 
-    public String getContactInfo() {
-        return contactInfo;
-    }
-
-    public void setContactInfo(String contactInfo) {
-        this.contactInfo = contactInfo;
-    }
-
     public String getPhone() {
         return phone;
     }
@@ -108,12 +103,12 @@ public class EmployeePhoneModel {
         this.organizationID = organizationID;
     }
 
-    public String getRealPhone() {
-        return realPhone;
+    public String getPhoneMobile() {
+        return phoneMobile;
     }
 
-    public void setRealPhone(String realPhone) {
-        this.realPhone = realPhone;
+    public void setPhoneMobile(String phoneMobile) {
+        this.phoneMobile = phoneMobile;
     }
 
     public String getLastUpdate() {
@@ -146,5 +141,21 @@ public class EmployeePhoneModel {
 
     public void setSection(String section) {
         this.section = section;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 }

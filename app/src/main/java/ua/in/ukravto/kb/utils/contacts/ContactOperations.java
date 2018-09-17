@@ -128,7 +128,7 @@ public class ContactOperations {
      * @param phoneType the type: cell, home, etc.
      * @return instance of ContactOperations
      */
-    public ContactOperations addPhone(String phone, int phoneType) {
+    public ContactOperations addMobilePhone(String phone, int phoneType) {
         mValues.clear();
         if (!TextUtils.isEmpty(phone)) {
             mValues.put(ContactsContract.CommonDataKinds.Phone.NUMBER, phone);
@@ -305,7 +305,7 @@ public class ContactOperations {
      * @param uri Uri for the existing raw contact to be updated
      * @return instance of ContactOperations
      */
-    public ContactOperations updatePhone(String existingNumber, String phone, Uri uri) {
+    public ContactOperations updateMobilePhone(String existingNumber, String phone, Uri uri) {
         if (!TextUtils.equals(phone, existingNumber)) {
             mValues.clear();
             mValues.put(ContactsContract.CommonDataKinds.Phone.NUMBER, phone);
@@ -314,6 +314,14 @@ public class ContactOperations {
         return this;
     }
 
+    public ContactOperations updatePhone(String existingNumber, String phone, Uri uri) {
+        if (!TextUtils.equals(phone, existingNumber)) {
+            mValues.clear();
+            mValues.put(ContactsContract.CommonDataKinds.Phone.NUMBER, phone);
+            addUpdateOp(uri);
+        }
+        return this;
+    }
 
     /**
      * Adds an insert operation into the batch
