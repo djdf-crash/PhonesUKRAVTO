@@ -4,20 +4,13 @@ import android.Manifest;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.AlertDialog;
-import android.arch.lifecycle.Observer;
-import android.arch.lifecycle.ViewModelProviders;
 import android.content.ContentResolver;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.databinding.DataBindingUtil;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -28,6 +21,13 @@ import net.steamcrafted.loadtoast.LoadToast;
 
 import java.util.List;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.databinding.DataBindingUtil;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProviders;
 import ua.in.ukravto.kb.R;
 import ua.in.ukravto.kb.databinding.ActivitySettingsBinding;
 import ua.in.ukravto.kb.repository.database.model.ResponseString;
@@ -35,8 +35,6 @@ import ua.in.ukravto.kb.service.DownloadService;
 import ua.in.ukravto.kb.utils.Pref;
 import ua.in.ukravto.kb.utils.account.AccountHelper;
 import ua.in.ukravto.kb.viewmodel.SettingsViewModel;
-
-import static ua.in.ukravto.kb.view.MainActivity.AUTHORITY;
 
 public class SettingsActivity extends AppCompatActivity {
 

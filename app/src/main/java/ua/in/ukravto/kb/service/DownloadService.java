@@ -1,20 +1,13 @@
 package ua.in.ukravto.kb.service;
 
-import android.annotation.SuppressLint;
 import android.app.IntentService;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
-import android.support.annotation.Nullable;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.content.FileProvider;
 import android.util.Log;
-import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -22,6 +15,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.core.content.FileProvider;
 import okhttp3.ResponseBody;
 import retrofit2.Response;
 import ua.in.ukravto.kb.BuildConfig;
@@ -30,20 +27,19 @@ import ua.in.ukravto.kb.repository.service.RetrofitHelper;
 import ua.in.ukravto.kb.utils.NotificationBuilderHelper;
 import ua.in.ukravto.kb.utils.Pref;
 
-import static android.support.constraint.Constraints.TAG;
 
 public class DownloadService extends IntentService {
 
     private final int notificationId = 999;
     private final String NAME_UPDATE_FILE = "update.apk";
     private final String PATH_DOWNLOAD = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + File.separator;
+    private final String TAG = DownloadService.class.getSimpleName();
 
 
     public DownloadService() {
         super("Download service UkrAVTO");
     }
 
-    @SuppressLint("StaticFieldLeak")
     @Override
     protected void onHandleIntent(@Nullable final Intent intent) {
         Log.d(TAG, "START DownloadService!");
@@ -59,34 +55,24 @@ public class DownloadService extends IntentService {
                         getString(R.string.text_notif_download),
                         NotificationCompat.PRIORITY_LOW,
                         NotificationCompat.CATEGORY_PROGRESS);
+                boolean writtenToDisk = writeResponseBodyToDisk(resp, mBuilder, notificationManager);
 
+                Log.d(TAG, "file download was a success? " + writtenToDisk);
 
-                new AsyncTask<Void, Void, Boolean>() {
-                    @Override
-                    protected Boolean doInBackground(Void... voids) {
-                        boolean writtenToDisk = writeResponseBodyToDisk(resp, mBuilder, notificationManager);
-
-                        Log.d(TAG, "file download was a success? " + writtenToDisk);
-                        return writtenToDisk;
+                if (writtenToDisk){
+                    notificationManager.cancel(notificationId);
+                    Intent intentForPending = createIntentForInstallAPP(getApplicationContext());
+                    Intent chooserIntent = Intent.createChooser(intentForPending,"");
+                    chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    getApplicationContext().startActivity(chooserIntent);
+                }else {
+                    if (intent != null) {
+                        final PendingIntent pendingIntent = PendingIntent.getService(getApplicationContext(), 0, intent, 0);
+                        mBuilder.setContentText(getString(R.string.text_download_fail)).setProgress(0,0,false);
+                        mBuilder.setContentIntent(pendingIntent).addAction(R.drawable.ic_retry_black,getString(R.string.text_retry), pendingIntent);
+                        notificationManager.notify(notificationId, mBuilder.build());
                     }
-
-                    @Override
-                    protected void onPostExecute(Boolean writtenToDisk) {
-                        super.onPostExecute(writtenToDisk);
-                        if (writtenToDisk){
-                            notificationManager.cancel(notificationId);
-                            Intent intentForPending = createIntentForInstallAPP(getApplicationContext());
-                            Intent chooserIntent = Intent.createChooser(intentForPending,"");
-                            chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            getApplicationContext().startActivity(chooserIntent);
-                        }else {
-                            final PendingIntent pendingIntent = PendingIntent.getService(getApplicationContext(), 0, intent, 0);
-                            mBuilder.setContentText(getString(R.string.text_download_fail)).setProgress(0,0,false);
-                            mBuilder.setContentIntent(pendingIntent).addAction(R.drawable.ic_retry_black,getString(R.string.text_retry), pendingIntent);
-                            notificationManager.notify(notificationId, mBuilder.build());
-                        }
-                    }
-                }.execute();
+                }
             }
 
         } catch (IOException e) {

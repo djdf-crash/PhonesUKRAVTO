@@ -3,17 +3,15 @@ package ua.in.ukravto.kb.utils;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.Context;
-import android.graphics.BitmapFactory;
 import android.os.Build;
-import android.support.v4.app.NotificationCompat;
 
+import androidx.core.app.NotificationCompat;
 import ua.in.ukravto.kb.R;
 
 public class NotificationBuilderHelper {
 
-    public static final String CHANNEL_ID = "kb.ukravto.in.ua";
+    private static final String CHANNEL_ID = "kb.ukravto.in.ua";
 
     public static NotificationCompat.Builder buildMessage(Context ctx, String title, String text, int priority, String category) {
 
@@ -38,7 +36,9 @@ public class NotificationBuilderHelper {
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
             channel.setDescription(description);
             NotificationManager notificationManager = ctx.getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
+            if (notificationManager != null) {
+                notificationManager.createNotificationChannel(channel);
+            }
         }
     }
 }

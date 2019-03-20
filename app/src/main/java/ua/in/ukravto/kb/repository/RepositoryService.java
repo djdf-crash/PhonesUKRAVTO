@@ -1,8 +1,6 @@
 package ua.in.ukravto.kb.repository;
 
-import android.arch.lifecycle.MutableLiveData;
-
-import retrofit2.Response;
+import androidx.lifecycle.MutableLiveData;
 import ua.in.ukravto.kb.repository.database.model.EmployeeOrganizationModel;
 import ua.in.ukravto.kb.repository.database.model.EmployeePhoneModel;
 import ua.in.ukravto.kb.repository.database.model.PhoneResponse;

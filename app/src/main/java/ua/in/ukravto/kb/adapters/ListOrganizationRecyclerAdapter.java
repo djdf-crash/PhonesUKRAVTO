@@ -1,7 +1,5 @@
 package ua.in.ukravto.kb.adapters;
 
-import android.support.annotation.NonNull;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +10,11 @@ import android.widget.Filterable;
 import java.util.ArrayList;
 import java.util.List;
 
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
 import ua.in.ukravto.kb.databinding.ItemOrginizationBinding;
+import ua.in.ukravto.kb.repository.database.AppDatabase;
+import ua.in.ukravto.kb.repository.database.DatabaseHelper;
 import ua.in.ukravto.kb.repository.database.model.EmployeeOrganizationModel;
 
 public class ListOrganizationRecyclerAdapter extends RecyclerView.Adapter<ListOrganizationRecyclerAdapter.ViewHolder> implements Filterable {
@@ -21,8 +23,9 @@ public class ListOrganizationRecyclerAdapter extends RecyclerView.Adapter<ListOr
     private List<EmployeeOrganizationModel> dataFiltered;
 
     public ListOrganizationRecyclerAdapter() {
-        data = new ArrayList<>();
-        dataFiltered = new ArrayList<>();
+        this.data = new ArrayList<>();
+        this.dataFiltered = new ArrayList<>();
+
     }
 
     @NonNull
@@ -47,7 +50,7 @@ public class ListOrganizationRecyclerAdapter extends RecyclerView.Adapter<ListOr
         return dataFiltered.size();
     }
 
-    public EmployeeOrganizationModel getItemForPosition(int position){
+    private EmployeeOrganizationModel getItemForPosition(int position){
         return dataFiltered.get(position);
     }
 
@@ -94,25 +97,40 @@ public class ListOrganizationRecyclerAdapter extends RecyclerView.Adapter<ListOr
 
     public static class ViewHolder extends RecyclerView.ViewHolder implements CompoundButton.OnCheckedChangeListener, View.OnClickListener {
 
-        public final ItemOrginizationBinding mBinding;
+        final ItemOrginizationBinding mBinding;
+        private AppDatabase mAppDatabase;
 
-        public ViewHolder(ItemOrginizationBinding binding) {
+        ViewHolder(ItemOrginizationBinding binding) {
             super(binding.getRoot());
             this.mBinding = binding;
             mBinding.checkOrganization.setOnCheckedChangeListener(this);
             mBinding.getRoot().setOnClickListener(this);
-            mBinding.textNameOrganization.setOnClickListener(this);
+            //mBinding.textNameOrganization.setOnClickListener(this);
+            this.mAppDatabase = DatabaseHelper.getInstanseDB(binding.getRoot().getContext());
         }
 
         @Override
         public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-            mBinding.getOrganization().setIsChecked(b);
+            EmployeeOrganizationModel employeeOrganization = mBinding.getOrganization();
+            setChecked(employeeOrganization, b);
         }
 
         @Override
         public void onClick(View view) {
-            mBinding.getOrganization().setIsChecked(!mBinding.getOrganization().getIsChecked());
-            mBinding.checkOrganization.setChecked(mBinding.getOrganization().getIsChecked());
+            EmployeeOrganizationModel employeeOrganization = mBinding.getOrganization();
+            setChecked(employeeOrganization, !employeeOrganization.getIsChecked());
+
+        }
+
+        private void setChecked(EmployeeOrganizationModel employeeOrganization, boolean flag){
+
+            employeeOrganization.setIsChecked(flag);
+            employeeOrganization.setDeleteBase(!flag);
+
+            mBinding.checkOrganization.setChecked(employeeOrganization.getIsChecked());
+
+            mAppDatabase.organizationDao().updateOrganization(employeeOrganization);
+
         }
     }
 }

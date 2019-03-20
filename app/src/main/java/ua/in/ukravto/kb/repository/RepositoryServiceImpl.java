@@ -1,19 +1,23 @@
 package ua.in.ukravto.kb.repository;
 
-import android.arch.lifecycle.MutableLiveData;
 import android.content.Context;
 import android.net.ConnectivityManager;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
+import androidx.annotation.Nullable;
+import androidx.lifecycle.MutableLiveData;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.in.ukravto.kb.R;
+import ua.in.ukravto.kb.repository.database.DatabaseHelper;
+import ua.in.ukravto.kb.repository.database.OrganizationDao;
 import ua.in.ukravto.kb.repository.database.model.EmployeeOrganizationModel;
 import ua.in.ukravto.kb.repository.database.model.EmployeePhoneModel;
 import ua.in.ukravto.kb.repository.database.model.PhoneResponse;
@@ -69,12 +73,18 @@ public class RepositoryServiceImpl implements RepositoryService {
                 PhoneResponse<EmployeeOrganizationModel> phoneResponse = response.body();
                 List<EmployeeOrganizationModel> list = new ArrayList<>();
                 for (EmployeeOrganizationModel organizationModel : phoneResponse.getBody()) {
-                    if (organizationModel.getIsDelete()){
-                        continue;
-                    }
+
+                    organizationModel.setName(organizationModel.getName().toUpperCase());
+
                     list.add(organizationModel);
                 }
-                phoneResponse.setBody(list);
+                Collections.sort(list, new Comparator<EmployeeOrganizationModel>() {
+                    @Override
+                    public int compare(EmployeeOrganizationModel e1, EmployeeOrganizationModel e2) {
+                        return e1.getName().compareToIgnoreCase(e2.getName());
+                    }
+                });
+                phoneResponse.setBody(addOrganizationInDataBase(list));
                 mutableLiveDataResponseOrganization.postValue(phoneResponse);
             }
 
@@ -87,6 +97,42 @@ public class RepositoryServiceImpl implements RepositoryService {
                 mutableLiveDataResponseOrganization.postValue(phoneResponse);
             }
         });
+    }
+
+    private List<EmployeeOrganizationModel> addOrganizationInDataBase(List<EmployeeOrganizationModel> organizationModelList) {
+
+        List<EmployeeOrganizationModel> tmpList = new ArrayList<>();
+
+        OrganizationDao dao = DatabaseHelper.getInstanseDB(mCtx).organizationDao();
+
+        for (EmployeeOrganizationModel apiModel : organizationModelList) {
+
+            EmployeeOrganizationModel dataBaseModel = dao.getById(apiModel.getID());
+
+            if (dataBaseModel == null) {
+                if (!apiModel.getIsDelete()) {
+                    dao.addOrganization(apiModel);
+                    tmpList.add(apiModel);
+                }
+                continue;
+            } else if (!dataBaseModel.getDeleteBase() && !apiModel.getIsDelete()){
+                apiModel.setIsChecked(dataBaseModel.getIsChecked());
+                tmpList.add(apiModel);
+                continue;
+            }
+
+            if (apiModel.getIsDelete()) {
+                if (dataBaseModel.getIsChecked()) {
+                    dataBaseModel.setIsDelete(true);
+                    dataBaseModel.setDeleteBase(true);
+                    dataBaseModel.setIsChecked(false);
+                    dao.updateOrganization(dataBaseModel);
+                } else if (!dataBaseModel.getDeleteBase()){
+                    dao.deleteOrganization(dataBaseModel);
+                }
+            }
+        }
+        return tmpList;
     }
 
     @Override

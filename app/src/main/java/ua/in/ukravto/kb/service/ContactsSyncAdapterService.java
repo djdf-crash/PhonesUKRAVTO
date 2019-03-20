@@ -6,44 +6,43 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SyncResult;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import retrofit2.Response;
 import ua.in.ukravto.kb.BuildConfig;
 import ua.in.ukravto.kb.R;
 import ua.in.ukravto.kb.repository.RepositoryService;
 import ua.in.ukravto.kb.repository.RepositoryServiceImpl;
+import ua.in.ukravto.kb.repository.database.AppDatabase;
+import ua.in.ukravto.kb.repository.database.DatabaseHelper;
+import ua.in.ukravto.kb.repository.database.OrganizationDao;
 import ua.in.ukravto.kb.repository.database.model.EmployeeOrganizationModel;
 import ua.in.ukravto.kb.repository.database.model.EmployeePhoneModel;
 import ua.in.ukravto.kb.repository.database.model.PhoneResponse;
 import ua.in.ukravto.kb.repository.database.model.ResponseString;
 import ua.in.ukravto.kb.repository.service.RetrofitHelper;
-import ua.in.ukravto.kb.utils.contacts.ContactsManager;
 import ua.in.ukravto.kb.utils.NotificationBuilderHelper;
 import ua.in.ukravto.kb.utils.Pref;
+import ua.in.ukravto.kb.utils.contacts.ContactsManager;
+import ua.in.ukravto.kb.view.MainActivity;
 
 public class ContactsSyncAdapterService extends Service {
     public static final String TAG = "ContactsSyncAdapterS";
-    private static ContentResolver mContentResolver = null;
-    private static SyncAdapterImpl sSyncAdapter = null;
+    private SyncAdapterImpl sSyncAdapter = null;
     public static final String SYNC_MARKER_KEY = "ua.in.ukravto.kb.samplesync.marker";
 
 
@@ -58,27 +57,26 @@ public class ContactsSyncAdapterService extends Service {
         return sSyncAdapter;
     }
 
-    public static void performSync(final Context context, final AccountManager accountManager, final Account account, Bundle extras, String authority, ContentProviderClient provider, final SyncResult syncResult) {
+    public static void performSync(final Context context, final AppDatabase mAppDatabase, final AccountManager accountManager, final Account account, Bundle extras, final SyncResult syncResult) {
         Log.d(TAG, "performSync: " + account.toString());
+
 
         long lastSyncMarker = getServerSyncMarker(accountManager, account);
         long newSyncState = lastSyncMarker;
         final String token = Pref.getInstance(context).getString(Pref.USER_TOKEN, "");
+
         if (TextUtils.isEmpty(token)) {
             return;
         }
 
-        Gson mGson = new Gson();
+        syncDeleteContacts(context, account, mAppDatabase, syncResult, token);
 
-        final Type type = new TypeToken<List<EmployeeOrganizationModel>>() {}.getType();
+        newSyncState = syncUpdateContacts(context, account, mAppDatabase, extras, syncResult, lastSyncMarker, newSyncState, token);
 
-        syncDeleteContacts(context, account, extras, syncResult, token, mGson, type);
-
-        newSyncState = syncUpdateContacts(context, account, extras, syncResult, lastSyncMarker, newSyncState, token, mGson, type);
         setServerSyncMarker(accountManager, account, newSyncState);
     }
 
-    private static long syncUpdateContacts(Context context, Account account, Bundle extras, SyncResult syncResult, long lastSyncMarker, long newSyncState, String token, Gson mGson, Type type) {
+    private static long syncUpdateContacts(Context context, Account account, AppDatabase mAppDatabase, Bundle extras, SyncResult syncResult, long lastSyncMarker, long newSyncState, String token) {
 
         boolean syncOnlyLastUpdate, syncWithPhoneOnly;
 
@@ -98,8 +96,7 @@ public class ContactsSyncAdapterService extends Service {
 
         Log.d(TAG, "syncOnlyLastUpdate: " + syncOnlyLastUpdate);
 
-        String savedOrganizationsString = Pref.getInstance(context).getString(Pref.SAVED_ORGANIZATIONS, "");
-        List<EmployeeOrganizationModel> listSavedOrganization = mGson.fromJson(savedOrganizationsString, type);
+        List<EmployeeOrganizationModel> listSavedOrganization = mAppDatabase.organizationDao().getAllByChecked(true);
 
         if (listSavedOrganization == null) {
             listSavedOrganization = new ArrayList<>();
@@ -107,11 +104,11 @@ public class ContactsSyncAdapterService extends Service {
 
         final ContactsManager cm = new ContactsManager(context, account);
 
-        Log.d(TAG, "org list: " + listSavedOrganization.size());
+        Log.d(TAG, "Organization list for sync: " + listSavedOrganization.size());
 
         try {
             for (final EmployeeOrganizationModel organizationModel : listSavedOrganization) {
-                Log.d(TAG, "org name: " + organizationModel.getName());
+                Log.d(TAG, "name: " + organizationModel.getName());
                 Response<PhoneResponse<EmployeePhoneModel>> response;
                 if (syncOnlyLastUpdate) {
                     response = RetrofitHelper.getPhoneService().getOrganizationIDPhonesLastUpdate(organizationModel.getID(), token).execute();
@@ -120,7 +117,7 @@ public class ContactsSyncAdapterService extends Service {
                 }
                 if (response.isSuccessful() && response.body() != null) {
                     if (response.body().getBody() != null) {
-                        Log.d(TAG, "size org: " + response.body().getBody().size());
+                        Log.d(TAG, "size: " + response.body().getBody().size());
                         newSyncState = cm.syncContacts(response.body().getBody(), lastSyncMarker, syncWithPhoneOnly);
                     }
                 }
@@ -135,12 +132,12 @@ public class ContactsSyncAdapterService extends Service {
         return newSyncState;
     }
 
-    private static void syncDeleteContacts(Context context, Account account, Bundle extras, SyncResult syncResult, String token, Gson mGson, Type type) {
+    private static void syncDeleteContacts(Context context, Account account, AppDatabase mAppDatabase, SyncResult syncResult, String token) {
 
         final ContactsManager cm = new ContactsManager(context, account);
 
-        String deleteOrganizationsString = Pref.getInstance(context).getString(Pref.DELETE_ORGANIZATIONS, "");
-        List<EmployeeOrganizationModel> listDeleteOrganization = mGson.fromJson(deleteOrganizationsString, type);
+        OrganizationDao dao = mAppDatabase.organizationDao();
+        List<EmployeeOrganizationModel> listDeleteOrganization = dao.getAllByDelete(true);
 
         if (listDeleteOrganization == null) {
             listDeleteOrganization = new ArrayList<>();
@@ -148,26 +145,30 @@ public class ContactsSyncAdapterService extends Service {
 
         Log.d(TAG, "Organization list for delete: " + listDeleteOrganization.size());
 
-        List<EmployeeOrganizationModel> listNotDeleteOrganization = new ArrayList<>();
         for (EmployeeOrganizationModel delOrganizationModel : listDeleteOrganization) {
             Log.d(TAG, "org name del: " + delOrganizationModel.getName());
             try {
                 final Response<PhoneResponse<EmployeePhoneModel>> response = RetrofitHelper.getPhoneService().getPhonesOrganizationID(delOrganizationModel.getID(), token).execute();
                 if (response.isSuccessful()) {
-                    if (response.body() != null || response.body().getBody() != null) {
+                    if (response.body() != null && response.body().getBody() != null) {
                         Log.d(TAG, "size org del: " + response.body().getBody().size());
                         cm.deleteContacts(response.body().getBody());
+
+                        if (delOrganizationModel.getIsDelete()){
+                            dao.deleteOrganization(delOrganizationModel);
+                        }else {
+                            delOrganizationModel.setIsChecked(false);
+                            delOrganizationModel.setDeleteBase(false);
+                            dao.updateOrganization(delOrganizationModel);
+                        }
                     }
                 }
             } catch (IOException e) {
-                listNotDeleteOrganization.add(delOrganizationModel);
+                delOrganizationModel.setDeleteBase(true);
                 Log.e(TAG, "IOException", e);
                 syncResult.stats.numIoExceptions++;
             }
         }
-
-        String deleteOrganizations = mGson.toJson(listNotDeleteOrganization);
-        Pref.getInstance(context).edit().putString(Pref.DELETE_ORGANIZATIONS, deleteOrganizations).apply();
     }
 
     private static long getServerSyncMarker(AccountManager mAccountManager, Account account) {
@@ -214,16 +215,21 @@ public class ContactsSyncAdapterService extends Service {
     private static class SyncAdapterImpl extends AbstractThreadedSyncAdapter {
         private Context mContext;
         private AccountManager mAccountManager;
+        private AppDatabase mAppDatabase;
 
-        public SyncAdapterImpl(Context context) {
+        SyncAdapterImpl(Context context) {
             super(context, true);
             this.mContext = context;
-            mAccountManager = AccountManager.get(context);
+            this.mAccountManager = AccountManager.get(context);
+            this.mAppDatabase = DatabaseHelper.getInstanseDB(context);
         }
 
         @Override
         public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
-            performSync(this.mContext, mAccountManager, account, extras, authority, provider, syncResult);
+
+            checkNewAndDelOrganization(mContext);
+
+            performSync(mContext, mAppDatabase, mAccountManager, account, extras, syncResult);
 
             boolean autoCheckUpdateAPK;
 
@@ -238,6 +244,129 @@ public class ContactsSyncAdapterService extends Service {
                 checkLastUpdateAPP(mContext);
             }
             Log.d(ContactsSyncAdapterService.TAG, syncResult.toDebugString());
+        }
+
+        private void checkNewAndDelOrganization(final Context mContext) {
+
+            final String token = Pref.getInstance(mContext).getString(Pref.USER_TOKEN, "");
+            if (TextUtils.isEmpty(token)) {
+                return;
+            }
+
+            try {
+                Response<PhoneResponse<EmployeeOrganizationModel>> response = RetrofitHelper.getPhoneService().getListOrganizations(token).execute();
+                if (response.isSuccessful() && response.body() != null){
+                    List<EmployeeOrganizationModel> listOrganizationAPI = response.body().getBody();
+
+                    if (listOrganizationAPI == null){
+                        return;
+                    }
+
+                    StringBuilder textDeleteOrganization = new StringBuilder();
+                    StringBuilder textNewOrganization = new StringBuilder();
+
+                    OrganizationDao dao = mAppDatabase.organizationDao();
+
+                    final HashMap<Integer, EmployeeOrganizationModel> mapCheckedOrganization = buildOrganizationMap(dao.getAllByChecked(true));
+                    final HashMap<Integer, EmployeeOrganizationModel> mapNotCheckedOrganization = buildOrganizationMap(dao.getAllByChecked(false));
+
+                    for (EmployeeOrganizationModel organizationAPI: listOrganizationAPI) {
+                        if ((mapCheckedOrganization.containsKey(organizationAPI.getID())
+                                || mapNotCheckedOrganization.containsKey(organizationAPI.getID()))
+                                && organizationAPI.getIsDelete()){
+                            EmployeeOrganizationModel tmpOrganization = mapCheckedOrganization.get(organizationAPI.getID());
+                            if (tmpOrganization != null) {
+                                tmpOrganization.setIsChecked(false);
+                                tmpOrganization.setIsDelete(true);
+                                tmpOrganization.setDeleteBase(true);
+                                dao.updateOrganization(tmpOrganization);
+                                if (textDeleteOrganization.length() == 0){
+                                    textDeleteOrganization = new StringBuilder(organizationAPI.getName().toUpperCase());
+                                }else {
+                                    textDeleteOrganization.append("\n").append(organizationAPI.getName().toUpperCase());
+                                }
+                                Log.d(TAG, "updateOrganization: " + organizationAPI.getName());
+                            }
+
+                            tmpOrganization = mapNotCheckedOrganization.get(organizationAPI.getID());
+                            if (tmpOrganization != null) {
+                                mAppDatabase.organizationDao().deleteOrganization(tmpOrganization);
+                                if (textDeleteOrganization.length() == 0){
+                                    textDeleteOrganization = new StringBuilder(organizationAPI.getName().toUpperCase());
+                                }else {
+                                    textDeleteOrganization.append("\n").append(organizationAPI.getName().toUpperCase());
+                                }
+                                Log.d(TAG, "deleteOrganization: " + organizationAPI.getName());
+                            }
+                        }else if (!mapNotCheckedOrganization.containsKey(organizationAPI.getID())
+                                && !mapCheckedOrganization.containsKey(organizationAPI.getID())
+                                && !organizationAPI.getIsDelete()){
+                            if (textNewOrganization.length() == 0){
+                                textNewOrganization = new StringBuilder(organizationAPI.getName().toUpperCase());
+                            }else {
+                                textNewOrganization.append("\n").append(organizationAPI.getName().toUpperCase());
+                            }
+
+                            mAppDatabase.organizationDao().addOrganization(organizationAPI);
+                        }
+                    }
+
+                    if (textDeleteOrganization.length() > 0) {
+
+                        Log.d(TAG, "textDeleteOrganization: " + textDeleteOrganization);
+
+                        Intent intent = new Intent(mContext, MainActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        PendingIntent pendingIntent = PendingIntent.getActivity(mContext, 0, intent, 0);
+
+                        NotificationCompat.Builder mBuilder = NotificationBuilderHelper.buildMessage(mContext,
+                                "Delete organizations",
+                                textDeleteOrganization.toString(),
+                                NotificationCompat.PRIORITY_DEFAULT,
+                                NotificationCompat.CATEGORY_MESSAGE);
+                        mBuilder.setLargeIcon(BitmapFactory.decodeResource(mContext.getResources(),
+                                R.mipmap.ic_launcher));
+                        mBuilder.setStyle(new NotificationCompat.BigTextStyle()
+                                .bigText(textDeleteOrganization.toString()));
+                        mBuilder.setContentIntent(pendingIntent);
+                        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(mContext);
+                        notificationManager.notify(2, mBuilder.build());
+                    }
+
+                    if (textNewOrganization.length() > 0) {
+
+                        Log.d(TAG, "textNewOrganization: " + textNewOrganization);
+
+                        Intent intent = new Intent(mContext, MainActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        PendingIntent pendingIntent = PendingIntent.getActivity(mContext, 0, intent, 0);
+
+                        NotificationCompat.Builder mBuilder = NotificationBuilderHelper.buildMessage(mContext,
+                                "Add new organizations",
+                                textNewOrganization.toString(),
+                                NotificationCompat.PRIORITY_DEFAULT,
+                                NotificationCompat.CATEGORY_MESSAGE);
+                        mBuilder.setLargeIcon(BitmapFactory.decodeResource(mContext.getResources(),
+                                R.mipmap.ic_launcher));
+                        mBuilder.setStyle(new NotificationCompat.BigTextStyle()
+                                .bigText(textNewOrganization.toString()));
+                        mBuilder.setContentIntent(pendingIntent);
+                        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(mContext);
+                        notificationManager.notify(3, mBuilder.build());
+                    }
+                }
+            } catch (IOException e) {
+                Log.e(TAG, "IOException", e);
+            }
+
+        }
+
+        private HashMap<Integer, EmployeeOrganizationModel> buildOrganizationMap(List<EmployeeOrganizationModel> orgList) {
+            HashMap<Integer, EmployeeOrganizationModel> resultMap = new HashMap<>();
+            for (EmployeeOrganizationModel model : orgList) {
+                resultMap.put(model.getID(), model);
+            }
+            return resultMap;
         }
     }
 }

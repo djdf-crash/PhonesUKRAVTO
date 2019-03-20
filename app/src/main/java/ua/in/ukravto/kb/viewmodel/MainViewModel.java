@@ -1,17 +1,12 @@
 package ua.in.ukravto.kb.viewmodel;
 
 import android.app.Application;
-import android.arch.lifecycle.AndroidViewModel;
-import android.arch.lifecycle.MutableLiveData;
-import android.arch.lifecycle.Observer;
-import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
+import androidx.annotation.NonNull;
+import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.MutableLiveData;
 import ua.in.ukravto.kb.repository.RepositoryService;
 import ua.in.ukravto.kb.repository.RepositoryServiceImpl;
-import ua.in.ukravto.kb.repository.database.model.EmployeeOrganizationModel;
-import ua.in.ukravto.kb.repository.database.model.PhoneResponse;
 import ua.in.ukravto.kb.repository.database.model.ResponseString;
 
 public class MainViewModel extends AndroidViewModel {

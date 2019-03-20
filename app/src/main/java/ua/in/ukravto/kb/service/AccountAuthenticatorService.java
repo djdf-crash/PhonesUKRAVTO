@@ -10,20 +10,22 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
+import java.util.Objects;
+
+import androidx.annotation.Nullable;
 import ua.in.ukravto.kb.R;
 import ua.in.ukravto.kb.utils.Pref;
 import ua.in.ukravto.kb.view.MainActivity;
 
 public class AccountAuthenticatorService extends Service {
     private static final String TAG = "AccountAuthenticatorService";
-    private static AccountAuthenticatorImpl sAccountAuthenticator = null;
+    private AccountAuthenticatorImpl sAccountAuthenticator = null;
 
     @Nullable
     public IBinder onBind(Intent intent) {
-        if (intent.getAction().equals("android.accounts.AccountAuthenticator")) {
+        if (Objects.requireNonNull(intent.getAction()).equals("android.accounts.AccountAuthenticator")) {
             return getAuthenticator().getIBinder();
         }
         return null;
@@ -39,13 +41,13 @@ public class AccountAuthenticatorService extends Service {
     private static class AccountAuthenticatorImpl extends AbstractAccountAuthenticator {
         private Context mContext;
 
-        public AccountAuthenticatorImpl(Context context) {
+        AccountAuthenticatorImpl(Context context) {
             super(context);
             this.mContext = context;
         }
 
         @Override
-        public Bundle addAccount(AccountAuthenticatorResponse response, String accountType, String authTokenType, String[] requiredFeatures, Bundle options) throws NetworkErrorException {
+        public Bundle addAccount(AccountAuthenticatorResponse response, String accountType, String authTokenType, String[] requiredFeatures, Bundle options) {
             Bundle reply = new Bundle();
             Intent i = new Intent(mContext, MainActivity.class);
             i.setAction(mContext.getString(R.string.ACCOUNT_TYPE));
@@ -70,7 +72,7 @@ public class AccountAuthenticatorService extends Service {
             return null;
         }
 
-        public Bundle getAuthToken(AccountAuthenticatorResponse response, Account account, String authTokenType, Bundle options) throws NetworkErrorException {
+        public Bundle getAuthToken(AccountAuthenticatorResponse response, Account account, String authTokenType, Bundle options) {
             String authToken = Pref.getInstance(mContext).getString(Pref.USER_TOKEN,"");
             if (!TextUtils.isEmpty(authToken)){
                 final Bundle result = new Bundle();
@@ -86,7 +88,7 @@ public class AccountAuthenticatorService extends Service {
             return null;
         }
 
-        public Bundle hasFeatures(AccountAuthenticatorResponse response, Account account, String[] features) throws NetworkErrorException {
+        public Bundle hasFeatures(AccountAuthenticatorResponse response, Account account, String[] features) {
             return null;
         }
 
