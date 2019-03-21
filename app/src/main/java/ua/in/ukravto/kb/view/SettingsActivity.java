@@ -189,6 +189,7 @@ public class SettingsActivity extends AppCompatActivity {
             Bundle settingsBundle = new Bundle();
             settingsBundle.putBoolean("force", true);
             settingsBundle.putBoolean("expedited", true);
+            settingsBundle.putBoolean("send_toast", true);
             settingsBundle.putBoolean(Pref.SYNC_ONLY_NEW_UPDATE_PHONES, mBinding.syncOnlyNewUpdates.isChecked());
             settingsBundle.putBoolean(Pref.SYNC_WITH_PHONES_ONLY, mBinding.syncOnlyWithPhone.isChecked());
             settingsBundle.putBoolean(Pref.AUTO_CHECK_UPDATE_APK, mBinding.autoCheckUpdateApk.isChecked());

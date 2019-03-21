@@ -43,4 +43,5 @@
     <string name="title_pref_ukr_avto">Налаштування УкрАВТО</string>
     <string name="add_new_organization">Додано нові організації</string>
     <string name="delete_organization">Видалено організації</string>
+    <string name="sync_successful">Синхронізація завершена!</string>
 </resources>
