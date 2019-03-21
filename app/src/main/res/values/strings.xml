@@ -40,4 +40,6 @@
     <string name="get_data_organizations">I will get data on organizations…</string>
     <string name="sync_now">Sync now</string>
     <string name="title_pref_ukr_avto">UkrAVTO Preferences</string>
+    <string name="add_new_organization">Add new organizations</string>
+    <string name="delete_organization">Delete organizations</string>
 </resources>

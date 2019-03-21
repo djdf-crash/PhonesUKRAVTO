@@ -320,7 +320,7 @@ public class ContactsSyncAdapterService extends Service {
                         PendingIntent pendingIntent = PendingIntent.getActivity(mContext, 0, intent, 0);
 
                         NotificationCompat.Builder mBuilder = NotificationBuilderHelper.buildMessage(mContext,
-                                "Delete organizations",
+                                mContext.getString(R.string.delete_organization),
                                 textDeleteOrganization.toString(),
                                 NotificationCompat.PRIORITY_DEFAULT,
                                 NotificationCompat.CATEGORY_MESSAGE);
@@ -342,7 +342,7 @@ public class ContactsSyncAdapterService extends Service {
                         PendingIntent pendingIntent = PendingIntent.getActivity(mContext, 0, intent, 0);
 
                         NotificationCompat.Builder mBuilder = NotificationBuilderHelper.buildMessage(mContext,
-                                "Add new organizations",
+                                mContext.getString(R.string.add_new_organization),
                                 textNewOrganization.toString(),
                                 NotificationCompat.PRIORITY_DEFAULT,
                                 NotificationCompat.CATEGORY_MESSAGE);
