@@ -14,7 +14,6 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.text.TextUtils;
 import android.util.Log;
-import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -245,7 +244,16 @@ public class ContactsSyncAdapterService extends Service {
                 checkLastUpdateAPP(mContext);
             }
             if (extras.containsKey("send_toast")){
-                Toast.makeText(mContext, R.string.sync_successful, Toast.LENGTH_LONG).show();
+                NotificationCompat.Builder mBuilder = NotificationBuilderHelper.buildMessage(mContext,
+                        mContext.getString(R.string.sync_successful),
+                        mContext.getString(R.string.sync_successful),
+                        NotificationCompat.PRIORITY_DEFAULT,
+                        NotificationCompat.CATEGORY_MESSAGE);
+                mBuilder.setLargeIcon(BitmapFactory.decodeResource(mContext.getResources(),
+                        R.mipmap.ic_launcher));
+
+                NotificationManagerCompat notificationManager = NotificationManagerCompat.from(mContext);
+                notificationManager.notify(10, mBuilder.build());
             }
             Log.d(ContactsSyncAdapterService.TAG, syncResult.toDebugString());
         }
